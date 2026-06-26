@@ -1032,36 +1032,45 @@ body:hover .cursor-dot{opacity:.5}
 }
 .invite-bg{width:100%;display:block}
 .invite-overlay{
-  position:absolute;inset:0;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
+  position:absolute;inset:0;
   padding:2rem 1.5rem;text-align:center;
 }
 .invite-guest-name{
   font-family:'Pinyon Script',cursive;font-size:clamp(1.5rem,5vw,2.2rem);
-  color:var(--dark);margin-bottom:.3rem;
+  color:var(--dark);
   text-shadow:0 1px 4px rgba(255,255,255,.8);
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:80%;
 }
 .invite-event{
   font-family:'DM Sans',sans-serif;font-size:.45rem;
   letter-spacing:.25em;text-transform:uppercase;
-  color:var(--burg);margin-bottom:.8rem;
+  color:var(--burg);
+  position:absolute;left:50%;transform:translateX(-50%);
 }
-.invite-details{
-  font-family:'Cormorant Garamond',serif;font-size:.82rem;
-  color:var(--stone);line-height:1.8;margin-bottom:.8rem;
-}
+.invite-details{display:none}
 .invite-qr{
-  width:80px;height:80px;background:rgba(255,255,255,.85);
-  border:2px solid var(--gold);border-radius:8px;
+  position:absolute;left:50%;transform:translateX(-50%);
+  width:80px;height:80px;background:rgba(255,255,255,.9);
+  border:2px solid var(--gold);border-radius:6px;
   display:flex;align-items:center;justify-content:center;
-  padding:4px;box-shadow:0 4px 15px rgba(0,0,0,.1);
+  padding:4px;
 }
 .invite-qr canvas{width:68px!important;height:68px!important}
 .invite-code{
-  font-family:monospace;font-size:.5rem;letter-spacing:.2em;
-  color:var(--stone);margin-top:.5rem;
-  background:rgba(255,255,255,.7);padding:.2rem .6rem;border-radius:4px;
+  position:absolute;left:50%;transform:translateX(-50%);
+  font-family:monospace;font-size:.45rem;letter-spacing:.15em;
+  color:var(--stone);
+  background:rgba(255,255,255,.8);padding:.2rem .5rem;border-radius:3px;
 }
+.invite-card[data-type="white"] .invite-guest-name{top:24%}
+.invite-card[data-type="white"] .invite-event{top:31%}
+.invite-card[data-type="white"] .invite-qr{top:76%;left:50%}
+.invite-card[data-type="white"] .invite-code{top:87%}
+.invite-card[data-type="trad"] .invite-guest-name{top:24%}
+.invite-card[data-type="trad"] .invite-event{top:31%}
+.invite-card[data-type="trad"] .invite-qr{top:73%;left:50%}
+.invite-card[data-type="trad"] .invite-code{top:84%}
 
 /* ═══════════════════════════════
    5. SVG VENUE ILLUSTRATIONS
@@ -2226,17 +2235,12 @@ function generateBoardingPass(data) {
   events.forEach(ev => {
     const card = document.createElement('div');
     card.className = 'invite-card';
+    card.setAttribute('data-type', ev.type);
     card.innerHTML = `
       <img class="invite-bg" src="${ev.img}" alt="${ev.label}">
       <div class="invite-overlay">
         <div class="invite-guest-name">${esc(data.firstName)} ${esc(data.lastName)}</div>
         <div class="invite-event">${ev.label}</div>
-        <div class="invite-details">
-          ${ev.date}<br>
-          ${ev.time}<br>
-          ${ev.venue}
-          ${ev.reception ? '<br><em>' + ev.reception + '</em>' : ''}
-        </div>
         <div class="invite-qr" id="qr-${ev.type}"></div>
         <div class="invite-code">${ev.code}</div>
       </div>
