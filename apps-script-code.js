@@ -38,6 +38,7 @@ function doPost(e) {
         dressCode: "Burgundy, Gold & Olive Green",
         color: "#6b0e1e",
         accent: "#c9a84c",
+        img: "https://drnick30.github.io/nl-wedding/photos/invite-trad-template.png",
         code: "NL-TRAD-" + new Date().getTime().toString(36).toUpperCase()
       });
     }
@@ -51,6 +52,7 @@ function doPost(e) {
         dressCode: "Rose Gold, Dusty Pink, Navy Blue & Chocolate Brown",
         color: "#1b2a4a",
         accent: "#c4917b",
+        img: "https://drnick30.github.io/nl-wedding/photos/invite-template.png",
         code: "NL-WHITE-" + new Date().getTime().toString(36).toUpperCase()
       });
     }
@@ -58,13 +60,15 @@ function doPost(e) {
     var cardHtml = "";
     for (var i = 0; i < events.length; i++) {
       var ev = events[i];
-      var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent("Guest: " + data.firstName + " " + data.lastName + " | Event: " + ev.name + " | Confirmation: " + ev.code + " | Guests: " + data.guests);
+      var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(data.firstName + " " + data.lastName + " - " + ev.name + " - " + ev.code + " - Guests: " + data.guests);
 
       cardHtml += "<div style='max-width:420px;margin:0 auto 32px;font-family:Georgia,serif;border:1px solid #d4c4a8;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1)'>";
 
-      cardHtml += "<div style='background:" + ev.color + ";padding:20px 24px;text-align:center'>";
-      cardHtml += "<div style='font-size:24px;color:#d4b060;font-style:italic;letter-spacing:2px'>N &nbsp;|&nbsp; L</div>";
-      cardHtml += "<div style='font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:3px;text-transform:uppercase;margin-top:4px'>Nilo26</div>";
+      cardHtml += "<img src='" + ev.img + "' width='420' style='width:100%;display:block;border-radius:12px 12px 0 0' alt='" + ev.name + " Invitation'>";
+
+      cardHtml += "<div style='background:" + ev.color + ";padding:14px 24px;text-align:center'>";
+      cardHtml += "<div style='font-size:20px;color:#d4b060;font-style:italic;letter-spacing:2px'>N &nbsp;|&nbsp; L</div>";
+      cardHtml += "<div style='font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:3px;text-transform:uppercase;margin-top:2px'>Nilo26</div>";
       cardHtml += "</div>";
 
       cardHtml += "<div style='padding:32px 28px;background:#f9f5ef;text-align:center'>";
