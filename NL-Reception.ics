@@ -1,0 +1,11 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//NL Wedding//EN
+BEGIN:VEVENT
+SUMMARY:Nicholas & Loveth Reception
+DTSTART:20260822T140000
+DTEND:20260822T220000
+LOCATION:Hall of Odin, Elegushi Beach, Lekki, Lagos
+DESCRIPTION:White Wedding Reception - Cocktail attire, Asoebi and Nigerian attire.
+END:VEVENT
+END:VCALENDAR

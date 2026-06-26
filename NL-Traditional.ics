@@ -1,0 +1,11 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//NL Wedding//EN
+BEGIN:VEVENT
+SUMMARY:Nicholas & Loveth Traditional Wedding
+DTSTART:20260820T140000
+DTEND:20260820T220000
+LOCATION:The Stable, 41/43 Bode Thomas Street, Surulere, Lagos
+DESCRIPTION:Traditional Wedding Ceremony - Igbo & Urhobo. Dress code: Burgundy, Gold & Olive Green.
+END:VEVENT
+END:VCALENDAR

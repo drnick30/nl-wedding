@@ -1,0 +1,11 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//NL Wedding//EN
+BEGIN:VEVENT
+SUMMARY:Nicholas & Loveth White Wedding
+DTSTART:20260822T100000
+DTEND:20260822T120000
+LOCATION:Our Lady of Perpetual Help, 14B Musa Yar'Adua Street, Victoria Island, Lagos
+DESCRIPTION:White Wedding Church Ceremony. Dress code: Rose Gold, Dusty Pink, Navy Blue, Chocolate Brown.
+END:VEVENT
+END:VCALENDAR

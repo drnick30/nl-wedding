@@ -1,0 +1,11 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//NL Wedding//EN
+BEGIN:VEVENT
+SUMMARY:Nicholas & Loveth Thanksgiving
+DTSTART:20260823T083000
+DTEND:20260823T110000
+LOCATION:Our Lady of Apostles Catholic Church, 7 Oyelowo Close, Animashaun, Lagos
+DESCRIPTION:Post-Wedding Church Thanksgiving Service.
+END:VEVENT
+END:VCALENDAR
