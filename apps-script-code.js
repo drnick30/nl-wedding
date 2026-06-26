@@ -60,11 +60,11 @@ function doPost(e) {
     var cardHtml = "";
     for (var i = 0; i < events.length; i++) {
       var ev = events[i];
-      var qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(data.firstName + " " + data.lastName + " - " + ev.name + " - " + ev.code + " - Guests: " + data.guests);
+      var qrText = data.firstName + " " + data.lastName + " - " + ev.name + " - " + ev.code + " - Guests: " + data.guests;
+      var qrUrl = "https://quickchart.io/qr?text=" + encodeURIComponent(qrText) + "&size=200&margin=2";
 
       cardHtml += "<div style='max-width:420px;margin:0 auto 32px;font-family:Georgia,serif;border:1px solid #d4c4a8;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.1)'>";
 
-      cardHtml += "<img src='" + ev.img + "' width='420' style='width:100%;display:block;border-radius:12px 12px 0 0' alt='" + ev.name + " Invitation'>";
 
       cardHtml += "<div style='background:" + ev.color + ";padding:14px 24px;text-align:center'>";
       cardHtml += "<div style='font-size:20px;color:#d4b060;font-style:italic;letter-spacing:2px'>N &nbsp;|&nbsp; L</div>";
@@ -115,7 +115,8 @@ function doPost(e) {
 
       cardHtml += "<div style='width:80px;height:1px;background:#d4c4a8;margin:0 auto 16px'></div>";
 
-      cardHtml += "<div style='margin:0 auto;width:150px'><img src='" + qrUrl + "' width='150' height='150' alt='QR Code' style='border:2px solid #d4b060;border-radius:8px;display:block'></div>";
+      var qrImgUrl = "https://quickchart.io/qr?text=" + encodeURIComponent(data.firstName + " " + data.lastName + " - " + ev.name + " - " + ev.code + " - Guests: " + data.guests) + "&size=200&margin=2";
+      cardHtml += "<div style='margin:0 auto;width:150px'><img src='" + qrImgUrl + "' width='150' height='150' alt='QR Code' style='border:2px solid #d4b060;border-radius:8px;display:block'></div>";
 
       cardHtml += "<div style='font-family:monospace;font-size:10px;letter-spacing:2px;color:#7a6a58;margin-top:8px'>" + ev.code + "</div>";
 
