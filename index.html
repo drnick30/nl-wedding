@@ -2281,7 +2281,7 @@ function generateBoardingPass(data) {
 
     try {
       new QRCode(document.getElementById('qr-' + ev.type), {
-        text: 'BEGIN:VCARD\nVERSION:3.0\nFN:' + data.firstName + ' ' + data.lastName + '\nNOTE:Event: ' + ev.label + ' | Confirmation: ' + ev.code + ' | Guests: ' + data.guests + '\nEND:VCARD',
+        text: data.firstName + ' ' + data.lastName + ' - ' + ev.label + ' - ' + ev.code + ' - Guests: ' + data.guests,
         width: 68, height: 68, colorDark: '#1a1410', colorLight: '#f5f0e8',
         correctLevel: QRCode.CorrectLevel.M
       });
