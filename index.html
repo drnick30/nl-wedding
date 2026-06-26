@@ -780,9 +780,9 @@ body{
 ═══════════════════════════════ */
 .rsvp-section{background:var(--dark) url('photos/rsvp-bg.jpg') center/cover;padding:5rem 3rem;border-bottom:1px solid rgba(255,255,255,.06)}
 .rsvp-section .s-label{color:var(--gold2)}
-.rsvp-section .s-title{color:white}
-.rsvp-section .orn-txt{color:rgba(255,255,255,.35)}
-.rsvp-sub{font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(255,255,255,.55);font-size:.92rem;line-height:1.7;margin-bottom:1.5rem}
+.rsvp-section .s-title{color:white;text-shadow:0 2px 8px rgba(0,0,0,.4)}
+.rsvp-section .orn-txt{color:rgba(255,255,255,.55)}
+.rsvp-sub{font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(255,255,255,.8);font-size:.95rem;line-height:1.7;margin-bottom:1.5rem}
 .event-toggle{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.5rem}
 .etbtn{
   background:none;border:1px solid rgba(255,255,255,.12);
@@ -794,7 +794,7 @@ body{
 .rsvp-form{display:none}
 .rsvp-form.show{display:block;animation:fadeUp .5s ease}
 .fg{margin-bottom:.9rem}
-.fg label{font-family:'DM Sans',sans-serif;font-size:.45rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.35);display:block;margin-bottom:.35rem}
+.fg label{font-family:'DM Sans',sans-serif;font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.6);display:block;margin-bottom:.35rem}
 .fg input,.fg select,.fg textarea{
   width:100%;padding:.65rem .85rem;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
@@ -814,7 +814,7 @@ body{
   border-radius:6px;margin-top:.4rem;
 }
 .rsvp-btn:hover{background:var(--gold2);transform:translateY(-1px)}
-.rsvp-note{font-size:.65rem;color:rgba(255,255,255,.25);margin-top:.7rem}
+.rsvp-note{font-size:.7rem;color:rgba(255,255,255,.5);margin-top:.7rem}
 .rsvp-success{display:none;text-align:center;padding:2rem 0;animation:fadeUp .6s ease}
 .rsvp-success h3{font-family:'Pinyon Script',cursive;font-size:2.2rem;color:var(--gold);margin-bottom:.8rem}
 .rsvp-success p{color:rgba(255,255,255,.55);font-size:.88rem;line-height:1.8}
@@ -1695,9 +1695,21 @@ body:hover .cursor-dot{opacity:.5}
     </form>
     <div class="rsvp-success" id="rsvpSuccess">
       <h3>Thank You!</h3>
-      <p style="margin-bottom:1rem">Your personalised boarding pass is ready. Screenshot it and present at the venue entrance.</p>
+      <p style="margin-bottom:1rem;color:rgba(255,255,255,.75)">Your personalised invitation is ready. Screenshot it and present at the venue entrance.</p>
       <div class="bp-cards" id="bpCards"></div>
-      <p style="margin-top:1.5rem">We can't wait to celebrate with you!<br>With love, Nicholas &amp; Loveth 💛</p>
+      <div style="margin-top:2rem;padding:1.2rem;border:1px solid rgba(255,255,255,.1);border-radius:10px;text-align:center">
+        <span style="font-family:'Pinyon Script',cursive;font-size:1.5rem;color:var(--gold);display:block;margin-bottom:.3rem">#nilo2026</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.82rem;color:rgba(255,255,255,.5)">Share your moments with our wedding hashtag</span>
+      </div>
+      <div style="margin-top:1.5rem;text-align:center">
+        <span style="font-family:'DM Sans',sans-serif;font-size:.42rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.4);display:block;margin-bottom:.6rem">Or reply via</span>
+        <div style="display:flex;flex-direction:column;gap:.5rem;align-items:center">
+          <a href="https://wa.me/2349037619097" target="_blank" style="color:var(--gold);text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:.88rem">📱 Vwede — +234 903 761 9097</a>
+          <a href="https://wa.me/2348162677441" target="_blank" style="color:var(--gold);text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:.88rem">📱 Maureen — +234 816 267 7441</a>
+          <a href="mailto:nicholasandloveth@gmail.com" style="color:var(--gold);text-decoration:none;font-family:'Cormorant Garamond',serif;font-size:.88rem">✉️ nicholasandloveth@gmail.com</a>
+        </div>
+      </div>
+      <p style="margin-top:1.5rem;color:rgba(255,255,255,.6);font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.92rem">We can't wait to celebrate with you!<br>With love, Nicholas &amp; Loveth 💛</p>
     </div>
   </div>
 </div>
@@ -2235,7 +2247,7 @@ function generateBoardingPass(data) {
 
     try {
       new QRCode(document.getElementById('qr-' + ev.type), {
-        text: 'Guest: ' + data.firstName + ' ' + data.lastName + '\nEvent: ' + ev.label + '\nConfirmation: ' + ev.code,
+        text: 'BEGIN:VCARD\nVERSION:3.0\nFN:' + data.firstName + ' ' + data.lastName + '\nNOTE:Event: ' + ev.label + '\\nConfirmation: ' + ev.code + '\\nGuests: ' + data.guests + '\nEND:VCARD',
         width: 50, height: 50, colorDark: '#1a1410', colorLight: '#f5f0e8',
         correctLevel: QRCode.CorrectLevel.M
       });
