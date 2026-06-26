@@ -164,7 +164,7 @@ body{
   background:url('photos/overlay.png') repeat;
   background-size:400px;opacity:.06;pointer-events:none;z-index:0;
 }
-.section{background-image:url('photos/marble-bg.jpg');background-size:cover;background-blend-mode:soft-light;background-color:rgba(245,240,232,.7)}
+.section{background-color:var(--cream)}
 
 /* ═══════════════════════════════
    ANIMATED BACKGROUND
@@ -215,6 +215,7 @@ body{
 .section:last-child{border-bottom:none}
 .section.dark-section{background:var(--dark);border-bottom-color:rgba(255,255,255,.06)}
 .section.alt-bg{background:var(--cream2)}
+.section.marble-bg{background:url('photos/marble-bg.jpg') center/cover;background-blend-mode:soft-light;background-color:rgba(245,240,232,.75)}
 
 .s-label{
   font-family:'DM Sans',sans-serif;font-size:.5rem;
@@ -340,11 +341,13 @@ body{
 
 /* Smooth section divider animation */
 .section::after{
-  content:'';position:absolute;bottom:0;left:10%;right:10%;
-  height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  content:'';position:absolute;bottom:-20px;left:10%;right:10%;
+  height:40px;
+  background:url('photos/section-flourish.png') center/contain no-repeat;
   opacity:0;transform:scaleX(0);transition:all 1s cubic-bezier(.4,0,.2,1) .3s;
+  z-index:2;
 }
-.section.in-view::after{opacity:.3;transform:scaleX(1)}
+.section.in-view::after{opacity:.25;transform:scaleX(1)}
 
 /* Names on photo subtle float */
 .names-on-photo{animation:nameFloat 6s ease-in-out infinite alternate}
@@ -376,6 +379,8 @@ body{
 .countdown{
   display:flex;gap:0;margin-top:2rem;
   border:1px solid var(--divider);overflow:hidden;
+  background:url('photos/countdown-bg.jpg') center/cover;
+  position:relative;
 }
 .cd-unit{
   flex:1;text-align:center;padding:1.2rem .5rem;
@@ -1029,7 +1034,7 @@ body:hover .cursor-dot{opacity:.5}
   padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;
   position:relative;overflow:hidden;
 }
-.bp-header img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.3;pointer-events:none}
+.bp-header img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;pointer-events:none;mix-blend-mode:soft-light}
 .bp-header.trad-bp{background:linear-gradient(135deg,#3d0a14,var(--burg))}
 .bp-header.white-bp{background:linear-gradient(135deg,var(--navy),#243560)}
 .bp-airline{font-family:'Pinyon Script',cursive;font-size:1.3rem;color:white}
@@ -1214,8 +1219,7 @@ body:hover .cursor-dot{opacity:.5}
 
 <!-- ═══ OPENING WITH PHOTO ═══ -->
 <div id="opening">
-  <img class="bg-img" src="photos/IMG_1193.jpg" alt="Nicholas & Loveth">
-  <img src="photos/opening-bg.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;mix-blend-mode:soft-light;opacity:.4;pointer-events:none">
+  <img class="bg-img" src="photos/hero-bg.jpg" alt="Nicholas & Loveth">
   <div class="overlay-gradient"></div>
   <div class="open-line h h1"></div>
   <div class="open-line h h2"></div>
@@ -1328,7 +1332,7 @@ body:hover .cursor-dot{opacity:.5}
 <div class="content-panel" id="contentPanel">
 
 <!-- WELCOME -->
-<div class="section" id="welcome" data-photo="welcome">
+<div class="section marble-bg" id="welcome" data-photo="welcome">
   <img class="floral-br" src="photos/floral-corner.png" alt="">
   <div class="reveal">
     <span class="s-label" style="background:none;-webkit-text-fill-color:var(--burg);color:var(--burg)">Together With Their Families</span>
@@ -1744,7 +1748,7 @@ body:hover .cursor-dot{opacity:.5}
 </div>
 
 <!-- GIFTS -->
-<div class="section" id="gifts" data-photo="gifts">
+<div class="section marble-bg" id="gifts" data-photo="gifts">
   <div class="reveal">
     <span class="s-label">Cash Gifts &amp; Giving</span>
     <h2 class="s-title serif">Celebrate With a Gift</h2>
@@ -2206,7 +2210,7 @@ function generateBoardingPass(data) {
     bp.className = 'boarding-pass';
     bp.innerHTML = `
       <div class="bp-header ${ev.cls}">
-        <img src="photos/boarding-header.png" alt="">
+        <img src="photos/boarding-strip.png" alt="">
         <span class="bp-airline" style="position:relative;z-index:1">Nilo26</span>
         <span class="bp-class" style="position:relative;z-index:1">VIP Guest</span>
       </div>
