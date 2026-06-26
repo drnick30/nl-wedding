@@ -1025,42 +1025,42 @@ body:hover .cursor-dot{opacity:.5}
    4. BOARDING PASS RSVP
 ═══════════════════════════════ */
 .bp-cards{display:flex;flex-direction:column;gap:1.5rem;margin-top:1.5rem}
-.boarding-pass{
-  background:white;border-radius:12px;overflow:hidden;
-  box-shadow:0 8px 40px rgba(0,0,0,.2);position:relative;
-  max-width:420px;margin:0 auto;
+.invite-card{
+  max-width:380px;margin:0 auto;border-radius:16px;overflow:hidden;
+  box-shadow:0 12px 50px rgba(0,0,0,.3);position:relative;
+  background:white;
 }
-.bp-header{
-  padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center;
-  position:relative;overflow:hidden;
+.invite-bg{width:100%;display:block}
+.invite-overlay{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:2rem 1.5rem;text-align:center;
 }
-.bp-header img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.4;pointer-events:none;mix-blend-mode:soft-light}
-.bp-header.trad-bp{background:linear-gradient(135deg,#3d0a14,var(--burg))}
-.bp-header.white-bp{background:linear-gradient(135deg,var(--navy),#243560)}
-.bp-airline{font-family:'Pinyon Script',cursive;font-size:1.3rem;color:white}
-.bp-class{font-family:'DM Sans',sans-serif;font-size:.4rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold2);border:1px solid var(--gold2);padding:.2rem .5rem;border-radius:3px}
-.bp-body{padding:1.2rem 1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
-.bp-field span:first-child{font-family:'DM Sans',sans-serif;font-size:.38rem;letter-spacing:.15em;text-transform:uppercase;color:var(--stone);display:block;margin-bottom:.15rem}
-.bp-field span:last-child{font-family:'Cormorant Garamond',serif;font-size:.95rem;color:var(--dark)}
-.bp-field.full{grid-column:span 2}
-.bp-divider{
-  border:none;border-top:2px dashed var(--divider);margin:0;
-  position:relative;
+.invite-guest-name{
+  font-family:'Pinyon Script',cursive;font-size:clamp(1.5rem,5vw,2.2rem);
+  color:var(--dark);margin-bottom:.3rem;
+  text-shadow:0 1px 4px rgba(255,255,255,.8);
 }
-.bp-divider::before,.bp-divider::after{
-  content:'';position:absolute;top:-10px;width:20px;height:20px;
-  background:var(--dark);border-radius:50%;
+.invite-event{
+  font-family:'DM Sans',sans-serif;font-size:.45rem;
+  letter-spacing:.25em;text-transform:uppercase;
+  color:var(--burg);margin-bottom:.8rem;
 }
-.bp-divider::before{left:-10px}
-.bp-divider::after{right:-10px}
-.bp-footer{padding:1rem 1.5rem;display:flex;justify-content:space-between;align-items:center}
-.bp-barcode{font-family:monospace;font-size:.5rem;letter-spacing:.3em;color:var(--stone)}
-.bp-qr{width:60px;height:60px;background:var(--cream);border:1px solid var(--divider);display:flex;align-items:center;justify-content:center;border-radius:4px}
-.bp-qr canvas{width:50px!important;height:50px!important}
-.bp-stamp{
-  position:absolute;top:50%;right:1.5rem;transform:translateY(-50%) rotate(-15deg);
-  font-family:'Pinyon Script',cursive;font-size:2.5rem;color:rgba(184,150,64,.12);
-  pointer-events:none;
+.invite-details{
+  font-family:'Cormorant Garamond',serif;font-size:.82rem;
+  color:var(--stone);line-height:1.8;margin-bottom:.8rem;
+}
+.invite-qr{
+  width:80px;height:80px;background:rgba(255,255,255,.85);
+  border:2px solid var(--gold);border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  padding:4px;box-shadow:0 4px 15px rgba(0,0,0,.1);
+}
+.invite-qr canvas{width:68px!important;height:68px!important}
+.invite-code{
+  font-family:monospace;font-size:.5rem;letter-spacing:.2em;
+  color:var(--stone);margin-top:.5rem;
+  background:rgba(255,255,255,.7);padding:.2rem .6rem;border-radius:4px;
 }
 
 /* ═══════════════════════════════
@@ -2210,45 +2210,43 @@ function generateBoardingPass(data) {
 
   const events = [];
   if (data.event === 'trad' || data.event === 'both') events.push({
-    type: 'trad', label: 'Traditional Wedding', date: '20 AUG 2026', time: '14:00',
-    venue: 'The Stable, Surulere', cls: 'trad-bp', code: 'NL-TRAD-' + Date.now().toString(36).toUpperCase()
+    type: 'trad', label: 'Traditional Wedding', date: 'Thursday, 20 August 2026', time: '2:00 PM',
+    venue: 'The Stable, Bode Thomas Street, Surulere, Lagos',
+    img: 'photos/invite-trad-template.png',
+    code: 'NL-TRAD-' + Date.now().toString(36).toUpperCase()
   });
   if (data.event === 'white' || data.event === 'both') events.push({
-    type: 'white', label: 'White Wedding', date: '22 AUG 2026', time: '10:00',
-    venue: 'Our Lady of Perpetual Help, VI', cls: 'white-bp', code: 'NL-WHITE-' + Date.now().toString(36).toUpperCase()
+    type: 'white', label: 'White Wedding', date: 'Saturday, 22 August 2026', time: '10:00 AM',
+    venue: 'Our Lady of Perpetual Help, Victoria Island, Lagos',
+    reception: 'Reception at Hall of Odin, Elegushi Beach, Lekki',
+    img: 'photos/invite-template.png',
+    code: 'NL-WHITE-' + Date.now().toString(36).toUpperCase()
   });
 
   events.forEach(ev => {
-    const bp = document.createElement('div');
-    bp.className = 'boarding-pass';
-    bp.innerHTML = `
-      <div class="bp-header ${ev.cls}">
-        <img src="photos/boarding-strip.png" alt="">
-        <span class="bp-airline" style="position:relative;z-index:1">Nilo26</span>
-        <span class="bp-class" style="position:relative;z-index:1">VIP Guest</span>
+    const card = document.createElement('div');
+    card.className = 'invite-card';
+    card.innerHTML = `
+      <img class="invite-bg" src="${ev.img}" alt="${ev.label}">
+      <div class="invite-overlay">
+        <div class="invite-guest-name">${esc(data.firstName)} ${esc(data.lastName)}</div>
+        <div class="invite-event">${ev.label}</div>
+        <div class="invite-details">
+          ${ev.date}<br>
+          ${ev.time}<br>
+          ${ev.venue}
+          ${ev.reception ? '<br><em>' + ev.reception + '</em>' : ''}
+        </div>
+        <div class="invite-qr" id="qr-${ev.type}"></div>
+        <div class="invite-code">${ev.code}</div>
       </div>
-      <div class="bp-body">
-        <div class="bp-field"><span>Passenger</span><span>${esc(data.firstName)} ${esc(data.lastName)}</span></div>
-        <div class="bp-field"><span>Event</span><span>${ev.label}</span></div>
-        <div class="bp-field"><span>Date</span><span>${ev.date}</span></div>
-        <div class="bp-field"><span>Boarding</span><span>${ev.time}</span></div>
-        <div class="bp-field full"><span>Venue</span><span>${ev.venue}</span></div>
-        <div class="bp-field"><span>Guests</span><span>${data.guests}</span></div>
-        <div class="bp-field"><span>Confirmation</span><span>${ev.code}</span></div>
-      </div>
-      <hr class="bp-divider">
-      <div class="bp-footer">
-        <span class="bp-barcode">||| ${ev.code} |||</span>
-        <div class="bp-qr" id="qr-${ev.type}"></div>
-      </div>
-      <div class="bp-stamp">N&L</div>
     `;
-    bpCards.appendChild(bp);
+    bpCards.appendChild(card);
 
     try {
       new QRCode(document.getElementById('qr-' + ev.type), {
-        text: 'BEGIN:VCARD\nVERSION:3.0\nFN:' + data.firstName + ' ' + data.lastName + '\nNOTE:Event: ' + ev.label + '\\nConfirmation: ' + ev.code + '\\nGuests: ' + data.guests + '\nEND:VCARD',
-        width: 50, height: 50, colorDark: '#1a1410', colorLight: '#f5f0e8',
+        text: 'BEGIN:VCARD\nVERSION:3.0\nFN:' + data.firstName + ' ' + data.lastName + '\nNOTE:Event: ' + ev.label + ' | Confirmation: ' + ev.code + ' | Guests: ' + data.guests + '\nEND:VCARD',
+        width: 68, height: 68, colorDark: '#1a1410', colorLight: '#f5f0e8',
         correctLevel: QRCode.CorrectLevel.M
       });
     } catch(e) {}
