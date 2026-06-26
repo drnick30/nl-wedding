@@ -2,6 +2,14 @@ function doPost(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var data = JSON.parse(e.postData.contents);
 
+  // Basic spam protection
+  if (!data.firstName || !data.lastName || !data.email || !data.event) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: "missing fields"})).setMimeType(ContentService.MimeType.JSON);
+  }
+  if (data.firstName.length > 50 || data.lastName.length > 50 || data.email.length > 100) {
+    return ContentService.createTextOutput(JSON.stringify({status: "error", message: "invalid"})).setMimeType(ContentService.MimeType.JSON);
+  }
+
   sheet.appendRow([
     data.timestamp,
     data.firstName,
