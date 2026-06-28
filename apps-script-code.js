@@ -1,5 +1,5 @@
 function doGet(e) {
-  var action = e.parameter.action;
+  var action = (e && e.parameter && e.parameter.action) ? e.parameter.action : "";
 
   if (action === "getPhotos") {
     var photoFolders = DriveApp.getFoldersByName("NL Wedding Photos");
