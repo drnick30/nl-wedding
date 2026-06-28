@@ -2469,28 +2469,40 @@ submitRSVP = function(e) {
 // 7. GUEST PHOTO UPLOAD
 // ═══════════════════════════════
 function handleUpload(files) {
-  const grid = document.getElementById('guestPhotosGrid');
-  const stored = JSON.parse(localStorage.getItem('nl_guest_photos') || '[]');
+  const uploadZone = document.getElementById('uploadZone');
+  const origText = uploadZone.querySelector('.upload-text').textContent;
+  uploadZone.querySelector('.upload-text').textContent = 'Uploading...';
 
   Array.from(files).forEach(file => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      stored.push(e.target.result);
-      localStorage.setItem('nl_guest_photos', JSON.stringify(stored));
-      renderGuestPhotos();
+      fetch(SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ type: 'photo', image: e.target.result, filename: file.name })
+      }).then(() => {
+        uploadZone.querySelector('.upload-text').textContent = 'Photo uploaded! Tap to add more';
+        setTimeout(() => loadGuestPhotos(), 3000);
+      });
     };
     reader.readAsDataURL(file);
   });
 }
 
-function renderGuestPhotos() {
-  const stored = JSON.parse(localStorage.getItem('nl_guest_photos') || '[]');
-  const grid = document.getElementById('guestPhotosGrid');
-  grid.innerHTML = stored.map((src, i) =>
-    `<img class="guest-photo" src="${src}" alt="Guest photo" onclick="openLB(-1); document.getElementById('lbImg').src='${src}'; document.getElementById('lightbox').classList.add('show')">`
-  ).join('');
+function loadGuestPhotos() {
+  fetch(SCRIPT_URL + '?action=getPhotos')
+    .then(r => r.json())
+    .then(photos => {
+      const grid = document.getElementById('guestPhotosGrid');
+      if (!photos || !photos.length) return;
+      grid.innerHTML = photos.map(p =>
+        `<img class="guest-photo" src="${esc(p.url)}" alt="Guest photo" onclick="document.getElementById('lbImg').src='${esc(p.url)}'; document.getElementById('lightbox').classList.add('show')">`
+      ).join('');
+    })
+    .catch(() => {});
 }
-renderGuestPhotos();
+loadGuestPhotos();
 
 // ═══════════════════════════════
 // GALLERY CAROUSEL DOTS (mobile)

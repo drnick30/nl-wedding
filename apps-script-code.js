@@ -1,6 +1,19 @@
 function doGet(e) {
   var action = e.parameter.action;
 
+  if (action === "getPhotos") {
+    var photoFolders = DriveApp.getFoldersByName("NL Wedding Photos");
+    if (!photoFolders.hasNext()) return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+    var photoFolder = photoFolders.next();
+    var files = photoFolder.getFiles();
+    var photos = [];
+    while (files.hasNext()) {
+      var f = files.next();
+      photos.push({url: "https://drive.google.com/uc?id=" + f.getId(), name: f.getName()});
+    }
+    return ContentService.createTextOutput(JSON.stringify(photos)).setMimeType(ContentService.MimeType.JSON);
+  }
+
   if (action === "getWishes") {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var wishSheet = ss.getSheetByName("Guestbook");
@@ -21,6 +34,24 @@ function doGet(e) {
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
   var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Handle photo upload
+  if (data.type === "photo") {
+    var folder;
+    var folders = DriveApp.getFoldersByName("NL Wedding Photos");
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder("NL Wedding Photos");
+      folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    }
+    var imageData = Utilities.base64Decode(data.image.split(",")[1]);
+    var blob = Utilities.newBlob(imageData, "image/jpeg", data.filename || "guest-photo.jpg");
+    var file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    var fileUrl = "https://drive.google.com/uc?id=" + file.getId();
+    return ContentService.createTextOutput(JSON.stringify({status: "ok", url: fileUrl})).setMimeType(ContentService.MimeType.JSON);
+  }
 
   // Handle guestbook wish
   if (data.type === "wish") {
