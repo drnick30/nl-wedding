@@ -1,6 +1,40 @@
+function doGet(e) {
+  var action = e.parameter.action;
+
+  if (action === "getWishes") {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var wishSheet = ss.getSheetByName("Guestbook");
+    if (!wishSheet) return ContentService.createTextOutput(JSON.stringify([])).setMimeType(ContentService.MimeType.JSON);
+
+    var data = wishSheet.getDataRange().getValues();
+    var wishes = [];
+    for (var i = 1; i < data.length; i++) {
+      wishes.push({name: data[i][0], rel: data[i][1], text: data[i][2], date: data[i][3]});
+    }
+    wishes.reverse();
+    return ContentService.createTextOutput(JSON.stringify(wishes)).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({status: "ok"})).setMimeType(ContentService.MimeType.JSON);
+}
+
 function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   var data = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  // Handle guestbook wish
+  if (data.type === "wish") {
+    var wishSheet = ss.getSheetByName("Guestbook");
+    if (!wishSheet) {
+      wishSheet = ss.insertSheet("Guestbook");
+      wishSheet.appendRow(["Name", "Relationship", "Message", "Timestamp"]);
+    }
+    wishSheet.appendRow([data.name, data.rel, data.text, data.date]);
+    return ContentService.createTextOutput(JSON.stringify({status: "ok"})).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Handle RSVP
+  var sheet = ss.getSheetByName("Sheet1") || ss.getSheets()[0];
 
   // Basic spam protection
   if (!data.firstName || !data.lastName || !data.email || !data.event) {

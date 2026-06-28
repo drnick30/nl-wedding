@@ -2219,27 +2219,51 @@ function submitRSVP(e) {
 // ═══════════════════════════════
 // GUESTBOOK
 // ═══════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwf_FV1JeWLf5rwvFg98K0d4QZjvpc-qNg1oCXY92lq8kXiFMNX0RO6O1q1WgHXmEIU/exec';
+
 function addWish() {
   const name = document.getElementById('wn').value.trim();
   const rel = document.getElementById('wr').value.trim();
   const text = document.getElementById('wt').value.trim();
   if (!name || !text) return;
+
+  const wish = { type: 'wish', name, rel, text, date: new Date().toISOString() };
+
+  // Send to Google Sheets
+  fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(wish) });
+
+  // Also save locally for instant display
   const wishes = JSON.parse(localStorage.getItem('nl_wishes') || '[]');
-  wishes.unshift({ name, rel, text, date: new Date().toISOString() });
+  wishes.unshift(wish);
   localStorage.setItem('nl_wishes', JSON.stringify(wishes));
+
   document.getElementById('wn').value = '';
   document.getElementById('wr').value = '';
   document.getElementById('wt').value = '';
   renderWishes();
 }
-function renderWishes() {
-  const wishes = JSON.parse(localStorage.getItem('nl_wishes') || '[]');
+
+function renderWishes(data) {
+  const wishes = data || JSON.parse(localStorage.getItem('nl_wishes') || '[]');
   const list = document.getElementById('wishesList');
   if (!wishes.length) { list.innerHTML = '<p style="color:var(--stone);font-style:italic;font-size:.85rem">Be the first to leave a wish for the couple ✨</p>'; return; }
   list.innerHTML = wishes.map(w => `<div class="wish-card"><div class="wish-name">${esc(w.name)}</div>${w.rel?`<div class="wish-rel">${esc(w.rel)}</div>`:''}<div class="wish-text">"${esc(w.text)}"</div></div>`).join('');
 }
+
+function loadWishesFromSheet() {
+  fetch(SCRIPT_URL + '?action=getWishes')
+    .then(r => r.json())
+    .then(wishes => {
+      if (wishes && wishes.length) {
+        localStorage.setItem('nl_wishes', JSON.stringify(wishes));
+        renderWishes(wishes);
+      }
+    })
+    .catch(() => renderWishes());
+}
+
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-renderWishes();
+loadWishesFromSheet();
 
 // ═══════════════════════════════
 // BANK DETAILS TOGGLE
