@@ -1818,7 +1818,8 @@ body:hover .cursor-dot{opacity:.5}
   <div class="reveal">
     <span class="s-label">Kindly Respond</span>
     <h2 class="s-title script" style="color:white">Will You Join Us?</h2>
-    <div class="ornament"><div class="orn-line"></div><div class="orn-dia"></div><span class="orn-txt" style="color:rgba(255,255,255,.35)">Please respond by 18th July 2026</span><div class="orn-dia"></div><div class="orn-line"></div></div>
+    <div class="ornament"><div class="orn-line"></div><div class="orn-dia"></div><span class="orn-txt" style="color:rgba(255,255,255,.35)">Please respond by 3rd August 2026</span><div class="orn-dia"></div><div class="orn-line"></div></div>
+    <div id="rsvpTimer" style="display:flex;justify-content:center;gap:1rem;margin:.6rem 0 1.2rem;flex-wrap:wrap"></div>
     <img src="photos/rsvp-envelope.png" alt="" style="width:160px;margin:0 auto 1rem;display:block;opacity:.65">
     <p class="rsvp-sub">Let us know which celebration(s) you'll be joining. Upon confirming, you'll receive a confirmation with venue details.</p>
   </div>
@@ -2149,6 +2150,50 @@ function updateCountdown() {
 }
 setInterval(updateCountdown, 1000);
 updateCountdown();
+
+// ═══════════════════════════════
+// RSVP DEADLINE TIMER
+// ═══════════════════════════════
+const RSVP_DEADLINE = new Date('2026-08-03T23:59:59+01:00');
+
+function updateRsvpTimer() {
+  const diff = RSVP_DEADLINE - new Date();
+  const timerEl = document.getElementById('rsvpTimer');
+  const rsvpSection = document.getElementById('rsvp');
+  const rsvpForm = document.getElementById('rsvpForm');
+  const eventToggle = document.querySelector('.event-toggle');
+
+  if (diff <= 0) {
+    // Deadline passed — hide form and toggle, show closed message
+    if (timerEl) timerEl.style.display = 'none';
+    if (eventToggle) eventToggle.style.display = 'none';
+    if (rsvpForm) rsvpForm.style.display = 'none';
+    const existing = document.getElementById('rsvpClosed');
+    if (!existing) {
+      const msg = document.createElement('div');
+      msg.id = 'rsvpClosed';
+      msg.style.cssText = 'text-align:center;padding:1.5rem 0;font-family:Cormorant Garamond,serif;font-style:italic;color:rgba(255,255,255,.55);font-size:.95rem;line-height:1.8';
+      msg.innerHTML = 'RSVP is now closed.<br><span style="font-size:.82rem;color:rgba(255,255,255,.35)">For enquiries contact us via WhatsApp.</span>';
+      rsvpForm && rsvpForm.parentNode.insertBefore(msg, rsvpForm);
+    }
+    return;
+  }
+
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+
+  if (timerEl) timerEl.innerHTML = [
+    {v: d, l: 'Days'}, {v: h, l: 'Hrs'}, {v: m, l: 'Min'}, {v: s, l: 'Sec'}
+  ].map(u => `<div style="text-align:center;min-width:38px">
+    <div style="font-family:'DM Sans',sans-serif;font-size:1.05rem;font-weight:600;color:var(--gold);line-height:1">${String(u.v).padStart(2,'0')}</div>
+    <div style="font-family:'DM Sans',sans-serif;font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:2px">${u.l}</div>
+  </div>`).join('<div style="color:rgba(255,255,255,.25);font-size:.9rem;padding-top:2px">·</div>');
+}
+
+setInterval(updateRsvpTimer, 1000);
+updateRsvpTimer();
 
 // ═══════════════════════════════
 // NAV
