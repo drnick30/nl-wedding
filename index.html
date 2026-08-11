@@ -1914,7 +1914,11 @@ body:hover .cursor-dot{opacity:.5}
     <p class="gifts-text">Your presence at our wedding is truly the greatest gift. However, if you'd like to bless us as we begin our new life together, the options below are provided with deep gratitude.</p>
     <img src="photos/gifts-art.png" alt="" style="width:200px;margin:0 auto 1.5rem;display:block;opacity:.7">
   </div>
-  <div class="gift-grid reveal-right">
+  <div id="giftClosedMsg" style="display:none;text-align:center;padding:2rem 1.5rem;margin:1rem 0;border:1px solid rgba(196,145,123,0.4);border-radius:10px;background:rgba(196,145,123,0.07)">
+    <div style="font-family:'Pinyon Script',cursive;font-size:2rem;color:var(--gold);margin-bottom:.6rem">Gifting is now closed</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:1rem;font-style:italic;color:var(--stone);line-height:1.9">Thank you so much for your generosity and love.<br>The window for gifts has now passed — your presence at our celebration means everything to us.</div>
+  </div>
+  <div id="giftContent" class="gift-grid reveal-right">
     <div class="gift-card" onclick="toggleBank()"><span class="gift-icon">🏦</span><h3>Bank Transfer</h3><p>Send a cash gift directly to our account. Every blessing, no matter the size, is deeply appreciated.</p></div>
     <a class="gift-card" href="https://www.weddingshop.com/buy/view/334407" target="_blank"><span class="gift-icon">🎁</span><h3>Wedding Registry</h3><p>Browse our registry and pick something special to help us start our new home together.</p></a>
   </div>
@@ -2201,6 +2205,24 @@ function updateRsvpTimer() {
 
 setInterval(updateRsvpTimer, 1000);
 updateRsvpTimer();
+
+// ═══════════════════════════════
+// GIFT SECTION DEADLINE
+// ═══════════════════════════════
+const GIFT_DEADLINE = new Date('2026-08-16T23:59:59+01:00');
+
+function checkGiftDeadline() {
+  if (new Date() < GIFT_DEADLINE) return;
+  const giftContent = document.getElementById('giftContent');
+  const bankDetails = document.getElementById('bankDetails');
+  const giftClosed = document.getElementById('giftClosedMsg');
+  if (giftContent) giftContent.style.display = 'none';
+  if (bankDetails) bankDetails.style.display = 'none';
+  if (giftClosed) giftClosed.style.display = 'block';
+}
+
+setInterval(checkGiftDeadline, 60000);
+checkGiftDeadline();
 
 // ═══════════════════════════════
 // NAV
