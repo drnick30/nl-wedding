@@ -707,6 +707,84 @@ body{
 .lb-next{right:1rem}
 
 /* ═══════════════════════════════
+   THE BIG DAY GALLERY
+═══════════════════════════════ */
+.bigday-section{background:var(--dark);padding:4rem 0 5rem;position:relative}
+.bd-tabs{display:flex;justify-content:center;gap:.6rem;margin:2rem auto 0;max-width:960px;padding:0 1.5rem}
+.bd-tab{
+  font-family:'Jost',sans-serif;font-size:.55rem;font-weight:300;letter-spacing:.22em;text-transform:uppercase;
+  padding:.65rem 2rem;border:1px solid rgba(196,145,123,.4);background:transparent;color:rgba(255,255,255,.55);
+  cursor:pointer;transition:all .3s;border-radius:3px;
+}
+.bd-tab.active{background:var(--gold);color:var(--dark);border-color:var(--gold)}
+.bd-tab:hover:not(.active){background:rgba(196,145,123,.15);color:rgba(255,255,255,.85);border-color:rgba(196,145,123,.6)}
+.bd-panel{display:none;max-width:1200px;margin:0 auto;padding:0 1rem}
+.bd-panel.active{display:block}
+.bd-sub{
+  font-family:'Jost',sans-serif;font-size:.48rem;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--gold2);text-align:center;margin:2.5rem 0 1.2rem;
+  display:flex;align-items:center;gap:1rem;
+}
+.bd-sub::before,.bd-sub::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.35),transparent)}
+.bd-photo-grid{
+  columns:3;column-gap:4px;margin-bottom:1rem;
+}
+.bd-photo-grid .gal-card{
+  break-inside:avoid;margin-bottom:4px;aspect-ratio:unset;height:auto;display:block;
+}
+.bd-photo-grid .gal-card img{height:auto;width:100%;display:block;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.bd-video-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:1rem;
+}
+.bd-video-card{
+  aspect-ratio:16/9;position:relative;overflow:hidden;cursor:pointer;
+  background:#111;display:flex;align-items:center;justify-content:center;
+}
+.bd-video-card:hover .bd-play{background:rgba(201,168,76,.95);transform:scale(1.1)}
+.bd-play{
+  width:52px;height:52px;border-radius:50%;background:rgba(201,168,76,.8);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .3s;z-index:1;
+}
+.bd-play svg{width:20px;height:20px;fill:var(--dark);margin-left:3px}
+.bd-vid-count{
+  position:absolute;bottom:.5rem;left:50%;transform:translateX(-50%);
+  font-family:'Jost',sans-serif;font-size:.45rem;letter-spacing:.12em;color:rgba(255,255,255,.5);
+  text-transform:uppercase;white-space:nowrap;
+}
+/* Big Day Lightbox */
+.bd-lightbox{
+  position:fixed;inset:0;z-index:2001;
+  background:rgba(0,0,0,.95);
+  display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(12px);
+}
+.bd-lightbox.show{display:flex}
+.bd-lightbox > img{max-width:92%;max-height:88vh;object-fit:contain;border-radius:4px}
+.bd-lightbox > iframe{width:92vw;max-width:1000px;height:82vh;border:none;border-radius:6px}
+.bd-lb-counter{
+  position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);
+  font-family:'Jost',sans-serif;font-size:.48rem;letter-spacing:.15em;color:rgba(255,255,255,.4);
+}
+/* Loading skeleton */
+.bd-photo-grid .gal-card img.bd-loading{
+  background:linear-gradient(90deg,#1a1a1a 25%,#242424 50%,#1a1a1a 75%);
+  background-size:200% 100%;
+  animation:bdSkel 1.4s infinite;min-height:160px;
+}
+@keyframes bdSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}
+@media(max-width:768px){
+  .bd-photo-grid{columns:2;column-gap:3px}
+  .bd-photo-grid .gal-card{margin-bottom:3px}
+  .bd-video-grid{grid-template-columns:repeat(2,1fr);gap:3px}
+  .bd-tabs{gap:.4rem}
+  .bd-tab{padding:.55rem 1.2rem;font-size:.48rem}
+}
+@media(max-width:480px){
+  .bd-video-grid{grid-template-columns:1fr 1fr}
+}
+
+/* ═══════════════════════════════
    ACCOMMODATION
 ═══════════════════════════════ */
 .acc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
@@ -1289,6 +1367,16 @@ body:hover .cursor-dot{opacity:.5}
   <button class="lb-nav lb-next" onclick="lbNav(1)">›</button>
 </div>
 
+<!-- BIG DAY LIGHTBOX -->
+<div class="bd-lightbox" id="bdLightbox">
+  <button class="lb-close" onclick="closeBDLB()" style="z-index:2">×</button>
+  <button class="lb-nav lb-prev" id="bdLBPrev" onclick="bdLBNav(-1)">‹</button>
+  <img id="bdLBImg" src="" alt="">
+  <iframe id="bdLBIframe" src="" style="display:none" allowfullscreen></iframe>
+  <button class="lb-nav lb-next" id="bdLBNext" onclick="bdLBNav(1)">›</button>
+  <div class="bd-lb-counter" id="bdLBCounter"></div>
+</div>
+
 <!-- DOVES removed -->
 
 <!-- FLOWER PETALS -->
@@ -1331,6 +1419,7 @@ body:hover .cursor-dot{opacity:.5}
   <a href="#details" onclick="closeNav()">Details</a>
   <a href="#dresscode" onclick="closeNav()">Dress Code</a>
   <a href="#gallery" onclick="closeNav()">Gallery</a>
+  <a href="#bigday" onclick="closeNav()">The Big Day</a>
   <a href="#accommodation" onclick="closeNav()">Stay & Travel</a>
   <a href="#rsvp" onclick="closeNav()">RSVP</a>
   <a href="#guestbook" onclick="closeNav()">Wishes</a>
@@ -1353,6 +1442,7 @@ body:hover .cursor-dot{opacity:.5}
   <img src="photos/IMG_1184.JPG" data-section="details" alt="Details">
   <img src="photos/IMG_1185.JPG" data-section="dresscode" alt="Dress Code">
   <img src="photos/IMG_1146.JPG" data-section="gallery" alt="Gallery">
+  <img src="https://lh3.googleusercontent.com/d/1crYE2akwRtZhgsxc7Vo39E_oehkZj_l6" data-section="bigday" alt="The Big Day">
   <img src="photos/IMG_1189.JPG" data-section="accommodation" alt="Stay">
   <img src="photos/IMG_1186.JPG" data-section="rsvp" alt="RSVP">
   <img src="photos/IMG_1187.JPG" data-section="guestbook" alt="Guestbook">
@@ -1759,6 +1849,47 @@ body:hover .cursor-dot{opacity:.5}
   </div>
   <div class="gal-counter" id="galCounter"></div>
   <div class="gal-swipe-hint">Swipe to explore →</div>
+</div>
+
+<!-- THE BIG DAY -->
+<div class="bigday-section" id="bigday" data-photo="bigday">
+  <div style="max-width:960px;margin:0 auto;text-align:center;position:relative;z-index:1;padding:0 1.5rem">
+    <div class="reveal">
+      <span class="s-label" style="color:var(--gold2)">22nd August 2026</span>
+      <h2 class="s-title script" style="color:white">The Big Day</h2>
+      <div class="ornament" style="justify-content:center">
+        <div class="orn-line" style="background:linear-gradient(90deg,transparent,rgba(201,168,76,.4),transparent)"></div>
+        <div class="orn-dia"></div>
+        <span class="orn-txt" style="color:rgba(255,255,255,.3)">Photos &amp; Videos from our celebration · Click to enlarge</span>
+        <div class="orn-dia"></div>
+        <div class="orn-line" style="background:linear-gradient(90deg,transparent,rgba(201,168,76,.4),transparent)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="bd-tabs reveal">
+    <button class="bd-tab active" data-tab="trad" onclick="switchBDTab('trad')">Traditional Wedding</button>
+    <button class="bd-tab" data-tab="white" onclick="switchBDTab('white')">White Wedding</button>
+  </div>
+
+  <!-- Traditional Panel -->
+  <div class="bd-panel active" id="bd-trad">
+    <div class="bd-sub">Photos</div>
+    <div class="bd-photo-grid" id="bd-trad-photos"></div>
+    <div class="bd-sub">Videos</div>
+    <div class="bd-video-grid" id="bd-trad-videos"></div>
+  </div>
+
+  <!-- White Wedding Panel -->
+  <div class="bd-panel" id="bd-white">
+    <div class="bd-sub">Portraits</div>
+    <div class="bd-photo-grid" id="bd-white-portraits"></div>
+    <div class="bd-sub">Reception</div>
+    <div class="bd-photo-grid" id="bd-white-photos"></div>
+    <div class="bd-sub">Videos</div>
+    <div class="bd-video-grid" id="bd-white-videos"></div>
+  </div>
 </div>
 
 <!-- STAY & TRAVEL -->
@@ -2255,6 +2386,193 @@ document.addEventListener('keydown', e => {
   if (e.key === 'ArrowLeft') lbNav(-1);
   if (e.key === 'ArrowRight') lbNav(1);
 });
+
+// ═══════════════════════════════
+// THE BIG DAY GALLERY
+// ═══════════════════════════════
+const BD_TRAD_PHOTOS = [
+  '1crYE2akwRtZhgsxc7Vo39E_oehkZj_l6','1BSuXsTIiuytbNpYc5UrYG_H181S8LJiQ','1T0c4jObvgDUUMvzo6V20EUbaF_xAGn9C',
+  '1ByIpNAO4w6LGpSo6MSixxmRkgRLytIOM','10rvKEKMuofRn5DDwa1_QBxblDqF_HpkJ','1Y98YD4fPebXLajVkyMjOU0ogusmyFhKo',
+  '1PdFYF3ly-KV6TiDpeJXX_CMtme-mq5Jg','1-78mWwDTNIC_09SN-utcEMiPV7K6nPz9','13dpTW4tBCBwtgJL99k5vzZibc92IDas7',
+  '1u66pOWYv-BZg_QD0zhCdENy8eyLDq8zR','1bxe2AgtEhIkthlEVAffmXNfuh6KVgA38','1t21PoptErw_nbJZHeo90C0dukcBzQTqF',
+  '1Ley4jnlMieQYOb8dOI-Iu_mHzi3Zcssr','1aa_OK3Av2YUvo15cJshjjsBZroQ_Ukri','1RI4wrQHNhhIDHPs5c16N0tui0_zVavks',
+  '1oSuV9cppsJfMC7U5nHZqbYikC1lKzh4Z','1Lx101AJW_j0avmzjSBtgQNuUiRAmIg6X','15A-p8SbUA3ZCmtuFfLhoIuTw67RH1BVo',
+  '1mgxvYHxqo8wXiUg26rweFLZov1qfmQB0','1qvmJQhCSy1i8WXFVv8OGKjzyK7r4IZBn','1tJBmoh-9ncqVENVAO8mTc3dL7GT2K70F',
+  '1LVm_RZHhyYitfmLrNUyzawBOOHlzcwn4','1w-0qm__YDX7CzTbGPNHR61htMyetcpXc','1qw61S4UWheq0s2OxejOmMTo4AJyDs54E',
+  '16IdV6UkKjr5wgYYHW3U4hMWYi-cbo0AN','1E5pey1Co8LYId8spj-jkw6J-mqZWmdjk','1A-WvUPpqu73IrmsCzEioqaUhfopkTTH8',
+  '1tbzJloseXCGQrrH89aoRWT4HhQMoUzaD','16pplJEqbha-kpW5IXefboJRRZgsNQCyU','11akvfDvxJYcTSbs-qWAfSwNKCf0mFvQK',
+  '1ESxNf0c5mxlds6x8fuBOZVR784Ah7_LF','1EYfGq-lqnnD1qFUU5agUB_k2IgCuCqfZ','1nzCozcdS-DXhtG59k0u94uvFIMwPEBBc',
+  '1pBNTIR8WQa--7iVK8s-KCK4rgfqpdWVn','13Dlb25gsngSaxgKP2oSl4QAD01P9OX46','1AYDr6T9hp_S0rubEoYEMWCJ1MyR8CUul',
+  '1DUJGtKJoo-5n91umitF8UTHNRNu2BCTa','1iNVrq3l-Muqzg3OeJ7VF3R91VD5RGhfW','1X-yjifT4cwm2Ck5J_vobXS8DActKTQnM',
+  '1MsJ7XNcw5gHDng8j06YGnjhYXuJf7sj_','1D9Qstv10IQCJCWa53UH6DzTj0I5m5GOS','1ptDCIYbCoO9rek8OeYgyzelTFcS3V1k4',
+  '1bl4PnC8JI2jMPDG5QUi8XPMMVVjobw0H','1cFOApivgdTOW6cnc21FNVzdMoG9V807j','1L3AetaAn_uqNIzKDu8cmJc0ofzTGR70l',
+  '1fnl7DkNxVNNIkvQ7ptbH54T7JFHDpag-','1H3okm8Ne_QHTNnt7nxcouRa1yvulcKeH','1LMJCuTfkIooTO_el1w6pT-PSrZqovNV6',
+  '1yPzObR5o2qPWHqYh9eKcruRYJXbXEHtf','1Al5bQy95jzoHrPmAMvJaRV4bpumzeBCH'
+];
+const BD_TRAD_VIDEOS = [
+  '1wHYGaFwtT5MkCTX1LQF4ucchvaVwaioT','1g0TB0ZyGwkHZMCn0TX-M0cIUrbYKIPSi','1HcnzE9lwO4ZX178lS3dqZ81q7-wyaxgd',
+  '1P6EJb_2o0c_tRLK1hqjFpNyWxI4QunQI','15y61wQOjvr0G3tf1wqGdaOVy2zaqvetO','1X1kuCvcMPClfK4KhdzMoBe87klUkAxQS',
+  '18U4lB0zgDP4m9gcbFWuo7rCxCZ_X800R','1x9xUcJE8GAOkMcpphQMPqu9v0JBLV20K','170np30PLwYywsyo60bpB8FdXdbpN42QN',
+  '1z5N7fh4GM4pxZ30LLQiW7-A5JLbq_Qkk','18LT72PRq8t5CgWVVMPhzxlOlBpVvV6i_','18TsDxx2N-MMRv5W9i0h2TjCDTIVh8ab3',
+  '1w193URg665ClQQDRJ2_Lv6C5RHqg-O3n','1eUJ364XEkyz-EQoCWXnefA8yCr_pBHij','198vFXlVRaHoJTK7apS61SwuPvO2kgffn',
+  '1pTvUV1XtpGFOOoH5T9F5BWh7L3L6lbkq','1Yklp2YDEBxMM_f7jVaiAoqgOzQPDrUPL','158oTSiZDYtlm0nPyg9sWz0RxkltLibng',
+  '1S6BxbtAHWxYemuucecD-9aAlRCuxKdhu'
+];
+const BD_WHITE_PORTRAITS = [
+  '1KQqsFunel6VMhSh_h5sedgzP1hjKndQ8','10fGlfUQQ2BzeODSIrKpLuuA2-o6lQ6A3','12f5CS2hl_pWEuypxEmE14fyJ1KsAHk2u',
+  '1L5q10phAxdNYoYsfftGsz8mhBj8KVC3s','18Pm_sPhktAzMjF9HJ9-Nq65DLnRld_Op','1rXC6SCwJkG9QxmYWSccOrixVktXtkRxX',
+  '17sxNBvC5kZIomrEotAh3nJJgCvJgkfUc','1zHBeGW8uQbn9WfRNIDlSo7lUQvX8LY0e','1Xg3Gdoe9lUatmZJvQR44D-g-uT4RsXjt',
+  '1wpECy7Aay88iZugQt5EXoPicOyMhLv04','1YgSZdO4cHx6yjyG0rrkg-FQvJgrvHGB5','1gDQ3lWFRYKOFqMNgpgwlbYvOvP8FUqRo',
+  '1tP5RlLnl3woXUxmqN6hS3FjfSzLEgR74','1r1KLb5ZjHtoxrmYUt0RlrUNXO4geaOXs','1vjTML_RML756leRUnljzQaevBt0JlpDQ',
+  '1MjG0Tl0KZoAOv7n1yOuX5l5eTaY1Ibrq','1TqtJyuMeAc6pUce7hT0Fqw_zHrZ4P3EE','1eTKJYWQjH2igbb_E8s7q0MqC7jw5pB_M',
+  '1LRGcLYtXtxLDdO7rAd1N05TdfTdXCTqH','1VNQkSUZli2rn3v-XzW0FUW1VUFPzsyuQ','1q-u862Xtq7wPKiDtBnsEMLnqDA2fjqrz',
+  '1lAapNnWM_3RJXShZx66yju4A2V7Iesxz','1Toz6Ij_Q-6K3HCKzJTVHWGhDVTwGOXTU','1t9ZwrpO4xFBCLgmrefoVLUARxVAWL9uy',
+  '1lTxU4req68hLOb3taAa9YpJhgAtu1Gdu','12Z_ZpXxDF32iWyrVEjGs94h-bYxh4WSh','1znUP-W5GFe2gNRp6Pt_8jhQhm13_dwq9',
+  '1GdKCAoALT94ou-boQ8015mdw2rkpXN6o','1rHCPDzanVhdyNSYOnPF7EtlwZylW73PB','1_elRk8Ck7xr_NUFFMXn-u2pgXAKWxShq',
+  '1Ny9f_aEX-uG6kRi56PKz3NB6SiVfQaP4','1Boa9J9RrJAsP590q9Xw6VpRzPGMvuzFI','127fqzhUKAwWihFl4-nPMZBR6NfPVK9c7',
+  '1vFG3eeTnxKrd3VR6BTnYws4qgHxy-KXM','182KMsyMqkmqU6aw2L3gDr8mrGjhESM7Q','13ecX_PpHY-py24xI9VMsmv6dX-OyUFIx',
+  '1xi8NSKT7I8jRKx9gaXMPv1SCaqEEL4Nb','1J143H30O9a5QRtmRMMRgueuRbdQJAjd-','1S-Y6jFNT2ViDk-tyUG7EnQE5eaPxi_0N',
+  '1rIHsEdZgqITqTvKKz1PIOs2TQn8iuTPn','1e_NLqqI0IZzSohFGuIXyGgkwzpcIgq3y','1GT-ahL-N8i3fh_oIHTIzbelY6MhPB2fV',
+  '19BkJhBE-RoxXw362RnObDIG_NL-XYJpz','1sAIOxdL_r-RTs3QBTB2RSuUNIaknGK5w','1hvXphmu_3Bhej9oDIOo_vZE-X4JJNyfk',
+  '1DgHUmZ01f6zxSkwAUcwLP6zN9yZd9jpS','15kpvqYQ7B1n8Tyuqjn45FdSJFBHmwQwB','1UyvvY5WmtjSuLlakhfqNaaCyWnNyNuHr',
+  '1eIXZ05wvA_1rrgqLpaogVraE6bwhazce','1Cl-W5Yjo4dvPAYiJ6BLWA_d-6N_OMfNi'
+];
+const BD_WHITE_PHOTOS = [
+  '1tX-kzjy7qGZEJiE7qfyy5jbHiFMbbuwI','19BQmAHIfzRwLJ8alNzRoGEwO07C-2GRr','1n-hdwPHV9HrzXuUATIQ0EQe0PLBWUyrk',
+  '1d8KH0IESg_MZ4exk7sswzLrUL2_mYdVG','12qNOGJpYHKXVYkcHocmwCGwvzK8JTajB','1_hm05m8dpEReu52WFYs0Lnf2-9Rhn1DJ',
+  '1uypwZjkhsy7qHdMlKmqS94cjA7ZtPev2','1bRmczHQwbtYsaGzN8VsoybFAoGA-cKeY','1p3srjO35B0sIeghowrvLQwEwhoIOfN1a',
+  '1YAqzjZQ3s_1hGIb7cssogBEsjvaHJQVY','1yu-QQcIIISq1Qpwisl7qY8IBvMpIbqch','1TLxNav-AbSPhH27xUnZ3C9eQmn59TBHG',
+  '17GfVPWFrf1DEEcTXYzPyydLT40aptmBJ','1wIWlG2HmIsfpFE1ImHPNsRoHio5Uyogw','1bzz0_1Hcz-e9jCzyjVqEe-Ughuvrbxb_',
+  '1Gsir-gDPzoGLwl5XFEHbx7lw5dEIYMnW','1cDCtiARsqufknJ1t24YmajBY36uYlCS7','1H5SpVTxnnTRfcG4s8CEXsw_B9w-6x_37',
+  '1_R7p_GgtmNZQi4BfPPl2sQ1MTKyux01E','1vIvK4H36zJPwkcqYN5vr-yT_nxZilZtm','1y440HWUNcMNv1dVcPCQ29GG6DJXIxIqR',
+  '1JS8AgUj3nZkV9MjNSY29AANz9ssmppd1','1tFq0naoE9W6l5WtO83d4t7VuExh4m2jA','1ihJ9DgTli5rvXAmXLp8ywbcdxVoseIZl',
+  '1btmlm3ES5SxWXrsRdA3zOdEhzfxYzZnb','1COP6jqjN09gJbLQyJiqtdcCvpElZbnhS','1r5BYyCvTkbwUe5ZTXbVdvP4xQKWNepvg',
+  '1yR71JaZcU9m1ueJdRnF3qr33ykcOGXP4','1up6nBfxIfd0IRfBnhD921obGXH6vGorH','1Z7Gge7K0OhtFatoHgTOdtcYluj0o7-QW',
+  '1qixfcKQaOnIQMCO_rSl8ebPgBgtvPLCs','1d8DQOc8o6jh32rhNIQwT-E07VYFezBpU','18jKTu6e3lTDyGmmCsFIzafL-5sXrpYmK',
+  '1-IW4KjWy7lK7JnIlVuVF9AefTAnSGmHE','1uvTmlGalAbmthe4Oy3uQx1hSbjfKmz7l','1it1PooG-6vOffHEg8Llm8EsQ5FPmDGUF',
+  '1nBZ0PeiF9oM_DCO6ErWWhrkQr4_eAlRp','196FNe_LOvczpsrltKePOS7JJsQUSOJFJ','1v6W4fNBXXfpRYNlgcjEDcrMw4lK5kP15',
+  '1a0pu5xoElbperlRp5meROe8JvCSR_Em9','1-4W9YXfrGjjQRuvcS_bVK0GINqtKV5yQ','1mqMxAtwHFv5YnEr9rPQimNbuokyYSVvu',
+  '1wIc0UAW_650D32AuTvBu8Ibo74Akjebp','1v8PPmxlSavrMCEdhBQMCaoMLul36lZQz','1eeFTIQCeA2bVf5ai16WUnjhMb4QPTV4s',
+  '14G-35ekyVkgFalDQvda1hGzRKZji4gG9','1C4ZsoUcZn8LayARNPs__NdCvQXM01uEC','1_4KFPX0K1hI-Ze3I48FW_jcXuSeKsCEa',
+  '1z9BgKoMZu7gxnMFaGEYLe0MqSn5wKgAV','1eFoNYRJxEwXTWHjiwZlAWTmhRdE2CzEd'
+];
+const BD_WHITE_VIDEOS = [
+  '1kt8f4DkNdWhmSo46LTQw9Ice8q-r4lmj','1i571gKerHLL-nrVP2RPfcUL0hbajwTi2','1KV1DlqXrR-CPROEK2IsKriO5DXyqnGf4',
+  '1tJS53kj9CpZ5iyRxjqCFOx7wa_fDCaUb','17r2pzsfoTzqHbIqYimNgAu2AqJRSXR5w','1tkjsPfGA9tB_qW-GpDaDa5TNm-BPkymH',
+  '1sTsGBAPwXJPN14-0wHw24yjvcNLq5K9B','12dvASHXEovcZe4EWl0nSUJCk-NU9J7YP'
+];
+
+function gdImg(id){return'https://lh3.googleusercontent.com/d/'+id}
+function gdVid(id){return'https://drive.google.com/file/d/'+id+'/preview'}
+
+const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+const bdImgObserver = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const img=e.target;
+      if(img.dataset.src){img.src=img.dataset.src;delete img.dataset.src;img.classList.remove('bd-loading')}
+      bdImgObserver.unobserve(img);
+    }
+  });
+},{rootMargin:'300px'});
+
+function renderBDPhotos(ids,containerId){
+  const c=document.getElementById(containerId);
+  ids.forEach((id,i)=>{
+    const card=document.createElement('div');
+    card.className='gal-card';
+    card.onclick=()=>openBDPhoto(containerId,i);
+    const img=document.createElement('img');
+    img.className='bd-loading';
+    img.src=BLANK_GIF;
+    img.dataset.src=gdImg(id);
+    img.alt='';
+    const ov=document.createElement('div');
+    ov.className='gal-overlay';
+    card.append(img,ov);
+    c.appendChild(card);
+    bdImgObserver.observe(img);
+  });
+}
+
+function renderBDVideos(ids,containerId,label){
+  const c=document.getElementById(containerId);
+  ids.forEach((id,i)=>{
+    const card=document.createElement('div');
+    card.className='bd-video-card';
+    card.onclick=()=>openBDVideo(id);
+    card.innerHTML=`<div class="bd-play"><svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg></div><div class="bd-vid-count">${label} ${i+1}</div>`;
+    c.appendChild(card);
+  });
+}
+
+// Photo lightbox state per container
+const bdPhotoMaps={};
+function registerBDPhotos(containerId,ids){bdPhotoMaps[containerId]=ids}
+
+let bdLBContainerId='',bdLBPhotoIdx=0;
+function openBDPhoto(containerId,idx){
+  const ids=bdPhotoMaps[containerId]||[];
+  bdLBContainerId=containerId;
+  bdLBPhotoIdx=idx;
+  const lb=document.getElementById('bdLightbox');
+  const img=document.getElementById('bdLBImg');
+  const ifr=document.getElementById('bdLBIframe');
+  ifr.src='';ifr.style.display='none';
+  img.src=gdImg(ids[idx]);img.style.display='';
+  document.getElementById('bdLBPrev').style.display='';
+  document.getElementById('bdLBNext').style.display='';
+  document.getElementById('bdLBCounter').textContent=(idx+1)+' / '+ids.length;
+  lb.classList.add('show');
+}
+function openBDVideo(id){
+  const lb=document.getElementById('bdLightbox');
+  const img=document.getElementById('bdLBImg');
+  const ifr=document.getElementById('bdLBIframe');
+  img.src='';img.style.display='none';
+  ifr.src=gdVid(id);ifr.style.display='';
+  document.getElementById('bdLBPrev').style.display='none';
+  document.getElementById('bdLBNext').style.display='none';
+  document.getElementById('bdLBCounter').textContent='';
+  lb.classList.add('show');
+}
+function closeBDLB(){
+  document.getElementById('bdLightbox').classList.remove('show');
+  document.getElementById('bdLBIframe').src='';
+}
+function bdLBNav(dir){
+  const ids=bdPhotoMaps[bdLBContainerId]||[];
+  if(!ids.length)return;
+  bdLBPhotoIdx=(bdLBPhotoIdx+dir+ids.length)%ids.length;
+  document.getElementById('bdLBImg').src=gdImg(ids[bdLBPhotoIdx]);
+  document.getElementById('bdLBCounter').textContent=(bdLBPhotoIdx+1)+' / '+ids.length;
+}
+function switchBDTab(tab){
+  document.querySelectorAll('.bd-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
+  document.querySelectorAll('.bd-panel').forEach(p=>p.classList.toggle('active',p.id==='bd-'+tab));
+}
+document.addEventListener('keydown',e=>{
+  if(!document.getElementById('bdLightbox').classList.contains('show'))return;
+  if(e.key==='Escape')closeBDLB();
+  if(e.key==='ArrowLeft')bdLBNav(-1);
+  if(e.key==='ArrowRight')bdLBNav(1);
+});
+// Close on backdrop click
+document.getElementById('bdLightbox').addEventListener('click',function(e){
+  if(e.target===this)closeBDLB();
+});
+
+(function initBDGallery(){
+  renderBDPhotos(BD_TRAD_PHOTOS,'bd-trad-photos');
+  registerBDPhotos('bd-trad-photos',BD_TRAD_PHOTOS);
+  renderBDVideos(BD_TRAD_VIDEOS,'bd-trad-videos','Trad Clip');
+  renderBDPhotos(BD_WHITE_PORTRAITS,'bd-white-portraits');
+  registerBDPhotos('bd-white-portraits',BD_WHITE_PORTRAITS);
+  renderBDPhotos(BD_WHITE_PHOTOS,'bd-white-photos');
+  registerBDPhotos('bd-white-photos',BD_WHITE_PHOTOS);
+  renderBDVideos(BD_WHITE_VIDEOS,'bd-white-videos','White Clip');
+})();
 
 // ═══════════════════════════════
 // RSVP
