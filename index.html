@@ -3215,6 +3215,26 @@ const bdPhotoMaps={};
 function registerBDPhotos(containerId,ids){bdPhotoMaps[containerId]=ids}
 
 let bdLBContainerId='',bdLBPhotoIdx=0;
+// Prevent iOS Safari pull-to-refresh / overscroll reload on the page itself
+// (overscroll-behavior-y:none is ignored on older iOS)
+(function(){
+  let _lastTouchY=0;
+  document.addEventListener('touchstart',e=>{
+    _lastTouchY=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener('touchmove',e=>{
+    // skip if lightbox is open — let the lightbox handle its own touches
+    if(document.getElementById('bdLightbox').classList.contains('show'))return;
+    const y=e.touches[0].clientY;
+    const dy=y-_lastTouchY;
+    _lastTouchY=y;
+    const scrollTop=window.scrollY||document.documentElement.scrollTop;
+    const atTop=scrollTop<=0&&dy>0;
+    const atBottom=(window.innerHeight+scrollTop)>=document.documentElement.scrollHeight-2&&dy<0;
+    if(atTop||atBottom)e.preventDefault();
+  },{passive:false});
+})();
+
 // iOS-safe scroll lock
 let _lbScrollY=0;
 function _lockScroll(){
