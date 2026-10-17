@@ -732,7 +732,17 @@ body{
 .bd-photo-grid .gal-card{
   break-inside:avoid;margin-bottom:4px;aspect-ratio:unset;height:auto;display:block;
 }
-.bd-photo-grid .gal-card img{height:auto;width:100%;display:block;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.bd-photo-grid .gal-card img{
+  height:auto;width:100%;display:block;
+  transition:transform .5s cubic-bezier(.4,0,.2,1), opacity .4s ease;
+  opacity:0;
+}
+.bd-photo-grid .gal-card img.bd-loaded{opacity:1}
+.bd-load-more{
+  display:flex;align-items:center;justify-content:center;
+  padding:2rem;color:rgba(255,255,255,.25);
+  font-family:'Jost',sans-serif;font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;
+}
 .bd-video-grid{
   display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:1rem;
 }
@@ -3099,34 +3109,75 @@ function gdImg(id){return'https://lh3.googleusercontent.com/d/'+id}
 function gdVid(id){return'https://drive.google.com/file/d/'+id+'/preview'}
 
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+const BD_BATCH = 30;
 
+// Lazy-load individual images as they enter viewport
 const bdImgObserver = new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
       const img=e.target;
-      if(img.dataset.src){img.src=img.dataset.src;delete img.dataset.src;img.classList.remove('bd-loading')}
+      if(img.dataset.src){
+        const s=img.dataset.src;
+        img.onload=()=>{img.classList.add('bd-loaded');img.classList.remove('bd-loading')};
+        img.onerror=()=>{img.classList.add('bd-loaded')};
+        img.src=s;
+        delete img.dataset.src;
+      }
       bdImgObserver.unobserve(img);
     }
   });
-},{rootMargin:'300px'});
+},{rootMargin:'600px'});
 
-function renderBDPhotos(ids,containerId){
+// Per-container state for infinite scroll
+const bdStates={};
+
+function appendBDPhotos(containerId,start){
+  const state=bdStates[containerId];
+  const ids=state.ids;
   const c=document.getElementById(containerId);
-  ids.forEach((id,i)=>{
+  const end=Math.min(start+BD_BATCH,ids.length);
+  for(let i=start;i<end;i++){
     const card=document.createElement('div');
     card.className='gal-card';
-    card.onclick=()=>openBDPhoto(containerId,i);
+    card.onclick=(()=>{const idx=i;return()=>openBDPhoto(containerId,idx)})();
     const img=document.createElement('img');
     img.className='bd-loading';
     img.src=BLANK_GIF;
-    img.dataset.src=gdImg(id);
+    img.dataset.src=`https://lh3.googleusercontent.com/d/${ids[i]}=w320`;
     img.alt='';
     const ov=document.createElement('div');
     ov.className='gal-overlay';
     card.append(img,ov);
     c.appendChild(card);
     bdImgObserver.observe(img);
-  });
+  }
+  state.loaded=end;
+  // update or remove sentinel
+  if(end<ids.length){
+    if(!state.sentinel){
+      const sentinel=document.createElement('div');
+      sentinel.className='bd-load-more';
+      sentinel.textContent='Loading more…';
+      c.parentNode.insertBefore(sentinel,c.nextSibling);
+      state.sentinel=sentinel;
+      const sentinelObs=new IntersectionObserver(entries=>{
+        if(entries[0].isIntersecting&&state.loaded<state.ids.length){
+          appendBDPhotos(containerId,state.loaded);
+        }
+      },{rootMargin:'400px'});
+      sentinelObs.observe(sentinel);
+      state.sentinelObs=sentinelObs;
+    }
+  } else if(state.sentinel){
+    state.sentinelObs&&state.sentinelObs.disconnect();
+    state.sentinel.remove();
+    state.sentinel=null;
+  }
+}
+
+function renderBDPhotos(ids,containerId){
+  bdStates[containerId]={ids,loaded:0,sentinel:null,sentinelObs:null};
+  appendBDPhotos(containerId,0);
 }
 
 function renderBDVideos(ids,containerId,label){
