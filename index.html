@@ -3120,14 +3120,17 @@ function gdVid(id){return'https://drive.google.com/file/d/'+id+'/preview'}
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const BD_BATCH = 30;
 
-// Lazy-load individual images as they enter viewport
+// Lazy-load images as they approach the viewport
 const bdImgObserver = new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
       const img=e.target;
       if(img.dataset.src){
         const s=img.dataset.src;
-        img.onload=()=>{img.classList.add('bd-loaded');img.classList.remove('bd-loading')};
+        img.onload=()=>{
+          img.classList.add('bd-loaded');img.classList.remove('bd-loading');
+          bdImgUnloader.observe(img); // watch for unload once loaded
+        };
         img.onerror=()=>{img.classList.add('bd-loaded')};
         img.src=s;
         delete img.dataset.src;
@@ -3135,7 +3138,25 @@ const bdImgObserver = new IntersectionObserver(entries=>{
       bdImgObserver.unobserve(img);
     }
   });
-},{rootMargin:'400px'});
+},{rootMargin:'500px'});
+
+// Unload images that are far off-screen to free decoded pixel memory
+// rootMargin 2000px top+bottom = keep loaded within 2000px of viewport
+const bdImgUnloader = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting){
+      const img=e.target;
+      // only unload if already loaded (not skeleton / not already unloaded)
+      if(!img.dataset.src && img.src && !img.src.endsWith('BAEAAAAALAAAAAABAAEAAAIBRAA7')){
+        img.dataset.src=img.src;
+        img.src=BLANK_GIF;
+        img.classList.remove('bd-loaded');
+        bdImgObserver.observe(img); // re-queue for reload on scroll-back
+        bdImgUnloader.unobserve(img);
+      }
+    }
+  });
+},{rootMargin:'2000px 0px 2000px 0px'});
 
 // Per-container state for infinite scroll
 const bdStates={};
