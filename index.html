@@ -728,9 +728,11 @@ body{
 .bd-sub::before,.bd-sub::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.35),transparent)}
 .bd-photo-grid{
   columns:3;column-gap:4px;margin-bottom:1rem;
+  will-change:transform;
 }
 .bd-photo-grid .gal-card{
   break-inside:avoid;margin-bottom:4px;aspect-ratio:unset;height:auto;display:block;
+  -webkit-tap-highlight-color:transparent;
 }
 .bd-photo-grid .gal-card img{
   height:auto;width:100%;display:block;
@@ -738,6 +740,10 @@ body{
   opacity:0;
 }
 .bd-photo-grid .gal-card img.bd-loaded{opacity:1}
+@media(max-width:600px){
+  .lb-nav{display:none}
+  .bd-lightbox>img{max-width:100%;max-height:80vh;border-radius:0}
+}
 .bd-load-more{
   display:flex;align-items:center;justify-content:center;
   padding:2rem;color:rgba(255,255,255,.25);
@@ -3261,6 +3267,75 @@ document.addEventListener('keydown',e=>{
 document.getElementById('bdLightbox').addEventListener('click',function(e){
   if(e.target===this)closeBDLB();
 });
+
+// ── Touch swipe + pinch-to-zoom on BD lightbox ──
+(function(){
+  const lb=document.getElementById('bdLightbox');
+  const lbImg=document.getElementById('bdLBImg');
+  let tx=0,ty=0,scale=1;
+  let startX=0,startY=0,startScale=1,startDist=0;
+  let isDragging=false,isPinching=false;
+
+  function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
+  function applyTransform(){lbImg.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
+  function resetTransform(){tx=0;ty=0;scale=1;lbImg.style.transform='';lbImg.style.transition='transform .25s ease'}
+
+  lb.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;
+      isDragging=true;isPinching=false;
+      lbImg.style.transition='none';
+    } else if(e.touches.length===2){
+      isPinching=true;isDragging=false;
+      startDist=dist(e.touches);startScale=scale;
+    }
+  },{passive:true});
+
+  lb.addEventListener('touchmove',e=>{
+    if(isPinching&&e.touches.length===2){
+      e.preventDefault();
+      scale=Math.max(1,Math.min(5,startScale*(dist(e.touches)/startDist)));
+      applyTransform();
+    } else if(isDragging&&e.touches.length===1&&scale<=1){
+      // just track for swipe detection — don't move the image
+    } else if(isDragging&&scale>1){
+      tx+=e.touches[0].clientX-startX;
+      ty+=e.touches[0].clientY-startY;
+      startX=e.touches[0].clientX;startY=e.touches[0].clientY;
+      applyTransform();
+    }
+  },{passive:false});
+
+  lb.addEventListener('touchend',e=>{
+    if(isPinching){isPinching=false;return}
+    if(!isDragging)return;
+    isDragging=false;
+    if(scale>1)return; // don't navigate while zoomed
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=Math.abs(e.changedTouches[0].clientY-startY);
+    if(Math.abs(dx)>50&&dy<80){
+      // swipe — navigate
+      lbImg.style.transition='opacity .15s ease';
+      lbImg.style.opacity='0';
+      setTimeout(()=>{
+        bdLBNav(dx<0?1:-1);
+        lbImg.style.opacity='1';
+      },150);
+    }
+  },{passive:true});
+
+  // reset zoom when lightbox closes
+  const origClose=window.closeBDLB;
+  window.closeBDLB=function(){origClose();resetTransform()};
+
+  // double-tap to reset zoom
+  let lastTap=0;
+  lb.addEventListener('touchend',e=>{
+    const now=Date.now();
+    if(now-lastTap<300){resetTransform();}
+    lastTap=now;
+  },{passive:true});
+})();
 
 (function initBDGallery(){
   renderBDPhotos(BD_TRAD_PHOTOS,'bd-trad-photos');
