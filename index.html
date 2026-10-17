@@ -3177,11 +3177,17 @@ function openBDVideo(id){
   document.getElementById('bdLBNext').style.display='none';
   document.getElementById('bdLBCounter').textContent='';
   lb.classList.add('show');
+  // pause background music while video plays
+  const music=document.getElementById('bgMusic');
+  if(music&&!music.paused){music.pause();music._pausedForVideo=true;}
 }
 function closeBDLB(){
   document.getElementById('bdLightbox').classList.remove('show');
   document.getElementById('bdLBIframe').src='';
   document.getElementById('bdLBDownload').style.display='none';
+  // resume background music if it was playing before
+  const music=document.getElementById('bgMusic');
+  if(music&&music._pausedForVideo){music.play();music._pausedForVideo=false;}
 }
 function bdLBNav(dir){
   const ids=bdPhotoMaps[bdLBContainerId]||[];
