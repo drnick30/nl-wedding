@@ -727,17 +727,16 @@ body{
 }
 .bd-sub::before,.bd-sub::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.35),transparent)}
 .bd-photo-grid{
-  columns:3;column-gap:4px;margin-bottom:1rem;
-  will-change:transform;
+  display:flex;gap:4px;align-items:flex-start;margin-bottom:1rem;
 }
+.bd-col{flex:1;display:flex;flex-direction:column;gap:4px;}
 .bd-photo-grid .gal-card{
-  break-inside:avoid;margin-bottom:4px;aspect-ratio:unset;height:auto;display:block;
+  width:100%;aspect-ratio:unset;height:auto;display:block;
   -webkit-tap-highlight-color:transparent;
-  content-visibility:auto;contain-intrinsic-size:0 200px;
 }
 .bd-photo-grid .gal-card img{
   height:auto;width:100%;display:block;
-  transition:transform .5s cubic-bezier(.4,0,.2,1), opacity .4s ease;
+  transition:opacity .3s ease;
   opacity:0;
 }
 .bd-photo-grid .gal-card img.bd-loaded{opacity:1}
@@ -783,18 +782,16 @@ body{
   position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);
   font-family:'Jost',sans-serif;font-size:.48rem;letter-spacing:.15em;color:rgba(255,255,255,.4);
 }
-/* Loading skeleton — aspect ratio prevents blank gap collapse */
-.bd-photo-grid .gal-card{position:relative}
+/* Loading skeleton */
 .bd-photo-grid .gal-card img.bd-loading{
   background:linear-gradient(90deg,#1a1a1a 25%,#242424 50%,#1a1a1a 75%);
   background-size:200% 100%;
   animation:bdSkel 1.4s infinite;
-  aspect-ratio:3/4;width:100%;height:auto;
+  min-height:120px;
 }
 @keyframes bdSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @media(max-width:768px){
-  .bd-photo-grid{columns:2;column-gap:3px}
-  .bd-photo-grid .gal-card{margin-bottom:3px}
+  .bd-photo-grid{gap:3px}
   .bd-video-grid{grid-template-columns:repeat(2,1fr);gap:3px}
   .bd-tabs{gap:.4rem}
   .bd-tab{padding:.55rem 1.2rem;font-size:.48rem}
@@ -3135,7 +3132,7 @@ const bdImgObserver = new IntersectionObserver(entries=>{
       bdImgObserver.unobserve(img);
     }
   });
-},{rootMargin:'600px'});
+},{rootMargin:'1200px'});
 
 // Per-container state for infinite scroll
 const bdStates={};
@@ -3143,7 +3140,8 @@ const bdStates={};
 function appendBDPhotos(containerId,start){
   const state=bdStates[containerId];
   const ids=state.ids;
-  const c=document.getElementById(containerId);
+  const grid=document.getElementById(containerId);
+  const cols=state.cols;
   const end=Math.min(start+BD_BATCH,ids.length);
   for(let i=start;i<end;i++){
     const card=document.createElement('div');
@@ -3152,28 +3150,27 @@ function appendBDPhotos(containerId,start){
     const img=document.createElement('img');
     img.className='bd-loading';
     img.src=BLANK_GIF;
-    img.dataset.src=`https://lh3.googleusercontent.com/d/${ids[i]}=w320`;
+    img.dataset.src=`https://lh3.googleusercontent.com/d/${ids[i]}=w400`;
     img.alt='';
     const ov=document.createElement('div');
     ov.className='gal-overlay';
     card.append(img,ov);
-    c.appendChild(card);
+    // round-robin across 3 columns — appending to a column never moves existing cards
+    cols[i%3].appendChild(card);
     bdImgObserver.observe(img);
   }
   state.loaded=end;
-  // update or remove sentinel
   if(end<ids.length){
     if(!state.sentinel){
       const sentinel=document.createElement('div');
       sentinel.className='bd-load-more';
       sentinel.textContent='Loading more…';
-      c.parentNode.insertBefore(sentinel,c.nextSibling);
+      grid.parentNode.insertBefore(sentinel,grid.nextSibling);
       state.sentinel=sentinel;
       const sentinelObs=new IntersectionObserver(entries=>{
-        if(entries[0].isIntersecting&&state.loaded<state.ids.length){
+        if(entries[0].isIntersecting&&state.loaded<state.ids.length)
           appendBDPhotos(containerId,state.loaded);
-        }
-      },{rootMargin:'400px'});
+      },{rootMargin:'600px'});
       sentinelObs.observe(sentinel);
       state.sentinelObs=sentinelObs;
     }
@@ -3185,7 +3182,16 @@ function appendBDPhotos(containerId,start){
 }
 
 function renderBDPhotos(ids,containerId){
-  bdStates[containerId]={ids,loaded:0,sentinel:null,sentinelObs:null};
+  const grid=document.getElementById(containerId);
+  grid.innerHTML='';
+  // create 3 column divs once — subsequent appends go to columns, not the grid directly
+  const cols=[0,1,2].map(()=>{
+    const col=document.createElement('div');
+    col.className='bd-col';
+    grid.appendChild(col);
+    return col;
+  });
+  bdStates[containerId]={ids,loaded:0,sentinel:null,sentinelObs:null,cols};
   appendBDPhotos(containerId,0);
 }
 
