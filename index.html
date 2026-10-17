@@ -3116,7 +3116,7 @@ function gdImg(id){return'https://lh3.googleusercontent.com/d/'+id}
 function gdVid(id){return'https://drive.google.com/file/d/'+id+'/preview'}
 
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-const BD_BATCH = 60;
+const BD_BATCH = 30;
 
 // Lazy-load individual images as they enter viewport
 const bdImgObserver = new IntersectionObserver(entries=>{
@@ -3133,7 +3133,7 @@ const bdImgObserver = new IntersectionObserver(entries=>{
       bdImgObserver.unobserve(img);
     }
   });
-},{rootMargin:'1200px'});
+},{rootMargin:'400px'});
 
 // Per-container state for infinite scroll
 const bdStates={};
@@ -3215,23 +3215,23 @@ const bdPhotoMaps={};
 function registerBDPhotos(containerId,ids){bdPhotoMaps[containerId]=ids}
 
 let bdLBContainerId='',bdLBPhotoIdx=0;
-// Prevent iOS Safari pull-to-refresh / overscroll reload on the page itself
-// (overscroll-behavior-y:none is ignored on older iOS)
+// Prevent iOS Safari overscroll page reload
+// touchstart must be non-passive so iOS honours preventDefault in touchmove
 (function(){
-  let _lastTouchY=0;
+  let _startY=0,_startScrollTop=0;
   document.addEventListener('touchstart',e=>{
-    _lastTouchY=e.touches[0].clientY;
-  },{passive:true});
+    _startY=e.touches[0].clientY;
+    _startScrollTop=window.scrollY;
+  },{passive:false});
   document.addEventListener('touchmove',e=>{
-    // skip if lightbox is open — let the lightbox handle its own touches
     if(document.getElementById('bdLightbox').classList.contains('show'))return;
-    const y=e.touches[0].clientY;
-    const dy=y-_lastTouchY;
-    _lastTouchY=y;
-    const scrollTop=window.scrollY||document.documentElement.scrollTop;
-    const atTop=scrollTop<=0&&dy>0;
-    const atBottom=(window.innerHeight+scrollTop)>=document.documentElement.scrollHeight-2&&dy<0;
-    if(atTop||atBottom)e.preventDefault();
+    const dy=e.touches[0].clientY-_startY;
+    const scrollTop=window.scrollY;
+    const maxScroll=document.documentElement.scrollHeight-window.innerHeight;
+    // block overscroll at top (pull-down) and at bottom (push-up past end)
+    if((dy>0&&scrollTop<=0)||(dy<0&&scrollTop>=maxScroll-1)){
+      e.preventDefault();
+    }
   },{passive:false});
 })();
 
