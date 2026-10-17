@@ -3314,9 +3314,20 @@ function bdLBNav(dir){
   document.getElementById('bdLBCounter').textContent=(bdLBPhotoIdx+1)+' / '+ids.length;
   bdPreload(ids,bdLBPhotoIdx);
 }
+const bdTabRendered={};
 function switchBDTab(tab){
   document.querySelectorAll('.bd-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   document.querySelectorAll('.bd-panel').forEach(p=>p.classList.toggle('active',p.id==='bd-'+tab));
+  if(!bdTabRendered[tab]){
+    bdTabRendered[tab]=true;
+    if(tab==='white'){
+      renderBDPhotos(BD_WHITE_PORTRAITS,'bd-white-portraits');
+      registerBDPhotos('bd-white-portraits',BD_WHITE_PORTRAITS);
+      renderBDPhotos(BD_WHITE_PHOTOS,'bd-white-photos');
+      registerBDPhotos('bd-white-photos',BD_WHITE_PHOTOS);
+      renderBDVideos(BD_WHITE_VIDEOS,'bd-white-videos','White Clip');
+    }
+  }
 }
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('bdLightbox').classList.contains('show'))return;
@@ -3438,14 +3449,12 @@ document.getElementById('bdLightbox').addEventListener('click',function(e){
 })();
 
 (function initBDGallery(){
+  // Only render the active tab (Trad) on load — White renders on first tab click
+  // This halves DOM nodes and image memory, preventing iOS tab kills
+  bdTabRendered['trad']=true;
   renderBDPhotos(BD_TRAD_PHOTOS,'bd-trad-photos');
   registerBDPhotos('bd-trad-photos',BD_TRAD_PHOTOS);
   renderBDVideos(BD_TRAD_VIDEOS,'bd-trad-videos','Trad Clip');
-  renderBDPhotos(BD_WHITE_PORTRAITS,'bd-white-portraits');
-  registerBDPhotos('bd-white-portraits',BD_WHITE_PORTRAITS);
-  renderBDPhotos(BD_WHITE_PHOTOS,'bd-white-photos');
-  registerBDPhotos('bd-white-photos',BD_WHITE_PHOTOS);
-  renderBDVideos(BD_WHITE_VIDEOS,'bd-white-videos','White Clip');
 })();
 
 // ═══════════════════════════════
