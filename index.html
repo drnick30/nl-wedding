@@ -731,9 +731,11 @@ body{
   display:flex;gap:4px;align-items:flex-start;margin-bottom:1rem;
 }
 .bd-col{flex:1;display:flex;flex-direction:column;gap:4px;}
+.bd-photo-grid{touch-action:pan-y;}
 .bd-photo-grid .gal-card{
   width:100%;aspect-ratio:unset;height:auto;display:block;
   -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
 .bd-photo-grid .gal-card img{
   height:auto;width:100%;display:block;
@@ -3214,45 +3216,27 @@ function renderBDVideos(ids,containerId,label){
 const bdPhotoMaps={};
 function registerBDPhotos(containerId,ids){bdPhotoMaps[containerId]=ids}
 
-let bdLBContainerId='',bdLBPhotoIdx=0;
-// Prevent iOS Safari overscroll page reload
-// touchstart must be non-passive so iOS honours preventDefault in touchmove
-(function(){
-  let _startY=0,_startScrollTop=0;
-  document.addEventListener('touchstart',e=>{
-    _startY=e.touches[0].clientY;
-    _startScrollTop=window.scrollY;
-  },{passive:false});
-  document.addEventListener('touchmove',e=>{
-    if(document.getElementById('bdLightbox').classList.contains('show'))return;
-    const dy=e.touches[0].clientY-_startY;
-    const scrollTop=window.scrollY;
-    const maxScroll=document.documentElement.scrollHeight-window.innerHeight;
-    // block overscroll at top (pull-down) and at bottom (push-up past end)
-    if((dy>0&&scrollTop<=0)||(dy<0&&scrollTop>=maxScroll-1)){
-      e.preventDefault();
-    }
-  },{passive:false});
-})();
+// Track last scroll time so accidental taps during fast scroll don't open lightbox
+let _lastScrollMs=0;
+window.addEventListener('scroll',()=>{_lastScrollMs=Date.now();},{passive:true});
 
-// iOS-safe scroll lock
+let bdLBContainerId='',bdLBPhotoIdx=0;
+// Scroll lock for lightbox — overflow:hidden on html+body (no position:fixed)
+// position:fixed causes a visual "jump" if triggered; this approach avoids it
 let _lbScrollY=0;
 function _lockScroll(){
   _lbScrollY=window.scrollY;
+  document.documentElement.style.overflow='hidden';
   document.body.style.overflow='hidden';
-  document.body.style.position='fixed';
-  document.body.style.top=-_lbScrollY+'px';
-  document.body.style.width='100%';
 }
 function _unlockScroll(){
+  document.documentElement.style.overflow='';
   document.body.style.overflow='';
-  document.body.style.position='';
-  document.body.style.top='';
-  document.body.style.width='';
   window.scrollTo(0,_lbScrollY);
 }
 
 function openBDPhoto(containerId,idx){
+  if(Date.now()-_lastScrollMs<250)return; // ignore tap if page was just scrolling
   const ids=bdPhotoMaps[containerId]||[];
   bdLBContainerId=containerId;
   bdLBPhotoIdx=idx;
