@@ -3285,67 +3285,121 @@ document.getElementById('bdLightbox').addEventListener('click',function(e){
   if(e.target===this)closeBDLB();
 });
 
-// ── Touch swipe + pinch-to-zoom on BD lightbox ──
+// ── Smooth slide swipe for BD lightbox ──
 (function(){
   const lb=document.getElementById('bdLightbox');
   const lbImg=document.getElementById('bdLBImg');
-  let tx=0,ty=0,scale=1;
-  let startX=0,startY=0,startScale=1,startDist=0;
-  let isDragging=false,isPinching=false;
 
-  function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY)}
-  function applyTransform(){lbImg.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`}
-  function resetTransform(){tx=0;ty=0;scale=1;lbImg.style.transform='';lbImg.style.transition='transform .25s ease'}
+  // Build a 3-slot strip: [prev] [current] [next], each 100vw wide
+  // The strip sits inside the lightbox; we translate it to show slot 1 (current)
+  const strip=document.createElement('div');
+  strip.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;width:300%;left:-100%;pointer-events:none;';
+  const slots=[0,1,2].map(()=>{
+    const s=document.createElement('div');
+    s.style.cssText='width:33.333%;height:100%;display:flex;align-items:center;justify-content:center;flex-shrink:0;';
+    const img=document.createElement('img');
+    img.style.cssText='max-width:92%;max-height:88vh;object-fit:contain;border-radius:4px;display:block;';
+    s.appendChild(img);strip.appendChild(s);
+    return img;
+  });
+  lb.appendChild(strip);
+
+  // Hide the original img element — strip slots take over
+  lbImg.style.display='none';
+
+  let curOffset=0; // px dragged from center (0 = resting)
+  function setStrip(x,animated){
+    strip.style.transition=animated?'transform .25s cubic-bezier(.25,.46,.45,.94)':'none';
+    strip.style.transform=`translateX(${x}px)`;
+  }
+
+  // Populate slots around current index
+  function loadSlots(){
+    const ids=bdPhotoMaps[bdLBContainerId]||[];
+    const n=ids.length;
+    if(!n)return;
+    const i=bdLBPhotoIdx;
+    const prevId=ids[(i-1+n)%n];
+    const curId=ids[i];
+    const nextId=ids[(i+1)%n];
+    slots[0].src=`https://lh3.googleusercontent.com/d/${prevId}=w1200`;
+    slots[1].src=`https://lh3.googleusercontent.com/d/${curId}=w1200`;
+    slots[2].src=`https://lh3.googleusercontent.com/d/${nextId}=w1200`;
+    setStrip(0,false);
+  }
+
+  // Hook into openBDPhoto so strip updates whenever lightbox opens
+  const origOpen=window.openBDPhoto;
+  window.openBDPhoto=function(cid,idx){
+    origOpen(cid,idx);
+    lbImg.style.display='none';
+    loadSlots();
+  };
+
+  // Hook into bdLBNav so strip stays in sync on arrow/keyboard nav
+  const origNav=window.bdLBNav;
+  window.bdLBNav=function(dir){
+    origNav(dir);
+    lbImg.style.display='none';
+    loadSlots();
+  };
+
+  // Hook into closeBDLB
+  const origClose=window.closeBDLB;
+  window.closeBDLB=function(){origClose();setStrip(0,false);};
+
+  // Touch state
+  let t0x=0,t0y=0,dragging=false,vx=0,lastX=0,lastT=0,lockAxis=null;
 
   lb.addEventListener('touchstart',e=>{
-    if(e.touches.length===1){
-      startX=e.touches[0].clientX;startY=e.touches[0].clientY;
-      isDragging=true;isPinching=false;
-      lbImg.style.transition='none';
-    } else if(e.touches.length===2){
-      isPinching=true;isDragging=false;
-      startDist=dist(e.touches);startScale=scale;
-    }
+    if(e.touches.length!==1)return;
+    t0x=lastX=e.touches[0].clientX;
+    t0y=e.touches[0].clientY;
+    lastT=Date.now();
+    dragging=true;lockAxis=null;vx=0;
+    setStrip(0,false);
   },{passive:true});
 
   lb.addEventListener('touchmove',e=>{
-    if(isPinching&&e.touches.length===2){
+    if(!dragging||e.touches.length!==1)return;
+    const cx=e.touches[0].clientX;
+    const cy=e.touches[0].clientY;
+    const dx=cx-t0x, dy=cy-t0y;
+    if(!lockAxis){
+      if(Math.abs(dx)>6||Math.abs(dy)>6)
+        lockAxis=Math.abs(dx)>Math.abs(dy)?'x':'y';
+    }
+    if(lockAxis==='x'){
       e.preventDefault();
-      scale=Math.max(1,Math.min(5,startScale*(dist(e.touches)/startDist)));
-      applyTransform();
-    } else if(isDragging&&e.touches.length===1&&scale<=1){
-      // just track for swipe detection — don't move the image
-    } else if(isDragging&&scale>1){
-      tx+=e.touches[0].clientX-startX;
-      ty+=e.touches[0].clientY-startY;
-      startX=e.touches[0].clientX;startY=e.touches[0].clientY;
-      applyTransform();
+      const now=Date.now();
+      vx=(cx-lastX)/(now-lastT||1)*1000; // px/s
+      lastX=cx;lastT=now;
+      setStrip(dx,false);
     }
   },{passive:false});
 
   lb.addEventListener('touchend',e=>{
-    if(isPinching){isPinching=false;return}
-    if(!isDragging)return;
-    isDragging=false;
-    if(scale>1)return; // don't navigate while zoomed
-    const dx=e.changedTouches[0].clientX-startX;
-    const dy=Math.abs(e.changedTouches[0].clientY-startY);
-    if(Math.abs(dx)>40&&dy<80){
-      bdLBNav(dx<0?1:-1);
+    if(!dragging)return;
+    dragging=false;
+    if(lockAxis!=='x'){return;}
+    const dx=e.changedTouches[0].clientX-t0x;
+    const W=window.innerWidth;
+    // commit navigation if dragged >30% of screen or fast flick (>300px/s)
+    if(dx<-W*0.3||vx<-300){
+      // slide left → next
+      setStrip(-W,true);
+      setTimeout(()=>{bdLBNav(1);},240);
+    } else if(dx>W*0.3||vx>300){
+      // slide right → prev
+      setStrip(W,true);
+      setTimeout(()=>{bdLBNav(-1);},240);
+    } else {
+      // snap back
+      setStrip(0,true);
     }
   },{passive:true});
 
-  // reset zoom when lightbox closes
-  const origClose=window.closeBDLB;
-  window.closeBDLB=function(){origClose();resetTransform()};
-
-  // double-tap to reset zoom
-  let lastTap=0;
-  lb.addEventListener('touchend',e=>{
-    const now=Date.now();
-    if(now-lastTap<300){resetTransform();}
-    lastTap=now;
-  },{passive:true});
+  // double-tap to do nothing (no zoom in strip mode)
 })();
 
 (function initBDGallery(){
