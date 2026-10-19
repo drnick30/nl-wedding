@@ -644,7 +644,8 @@ body{
     scrollbar-width:none;
   }
   .gallery-grid::-webkit-scrollbar{display:none}
-  .gal-card{
+  /* swipeable carousel cards (NOT bd-photo-grid) */
+  .gallery-grid .gal-card{
     flex:0 0 85%;
     scroll-snap-align:center;
     aspect-ratio:3/4;
@@ -652,8 +653,14 @@ body{
     margin-right:12px;
     box-shadow:0 8px 30px rgba(0,0,0,.4);
   }
-  .gal-card:last-child{margin-right:1.2rem}
-  .gal-card img{border-radius:16px}
+  .gallery-grid .gal-card:last-child{margin-right:1.2rem}
+  .gallery-grid .gal-card img{border-radius:16px}
+  /* bd-photo-grid: no shadow, no overflow:hidden, radius on img only */
+  .bd-photo-grid .gal-card{
+    overflow:visible;box-shadow:none;border-radius:0;
+    flex:unset;scroll-snap-align:unset;aspect-ratio:unset;margin-right:0;
+  }
+  .bd-photo-grid .gal-card img{border-radius:6px;}
   .gal-overlay{border-radius:16px;opacity:1;background:linear-gradient(to top,rgba(0,0,0,.4) 0%,transparent 30%)}
 
   /* Gallery counter */
@@ -791,12 +798,10 @@ body{
   position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);
   font-family:'Jost',sans-serif;font-size:.48rem;letter-spacing:.15em;color:rgba(255,255,255,.4);
 }
-/* Loading skeleton */
+/* Loading skeleton — solid bg, no animation (animated gradient = GPU layer per card) */
 .bd-photo-grid .gal-card img.bd-loading{
-  background:linear-gradient(90deg,#1a1a1a 25%,#242424 50%,#1a1a1a 75%);
-  background-size:200% 100%;
-  animation:bdSkel 1.4s infinite;
-  min-height:120px;
+  background:#1c1c1c;
+  min-height:100px;
 }
 @keyframes bdSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @media(max-width:768px){
@@ -3202,9 +3207,7 @@ function appendBDPhotos(containerId,start){
     img.src=BLANK_GIF;
     img.dataset.src=`https://lh3.googleusercontent.com/d/${ids[i]}=w400`;
     img.alt='';
-    const ov=document.createElement('div');
-    ov.className='gal-overlay';
-    card.append(img,ov);
+    card.append(img);
     // round-robin across 3 columns — appending to a column never moves existing cards
     cols[i%3].appendChild(card);
     bdImgObserver.observe(img);
