@@ -730,7 +730,7 @@ body{
 .bd-photo-grid{
   display:flex;gap:4px;align-items:flex-start;margin-bottom:1rem;
 }
-.bd-col{flex:1;display:flex;flex-direction:column;gap:4px;}
+.bd-col{flex:1;display:flex;flex-direction:column;gap:4px;transform:translateZ(0);}
 .bd-photo-grid{touch-action:pan-y;}
 .bd-photo-grid .gal-card{
   width:100%;aspect-ratio:unset;height:auto;display:block;
@@ -739,8 +739,14 @@ body{
 }
 .bd-photo-grid .gal-card img{
   height:auto;width:100%;display:block;
-  transition:opacity .3s ease;
   opacity:0;
+  /* no transition by default — added by JS only during fade-in to avoid
+     creating GPU layers for every image on the page */
+}
+.bd-photo-grid .gal-card img.bd-fading{transition:opacity .25s ease;}
+/* disable hover zoom on touch devices — causes repaints on every tap */
+@media(hover:none){
+  .bd-photo-grid .gal-card:hover img{transform:none}
 }
 .bd-photo-grid .gal-card img.bd-loaded{opacity:1}
 @media(max-width:600px){
@@ -3128,8 +3134,10 @@ const bdImgObserver = new IntersectionObserver(entries=>{
       if(img.dataset.src){
         const s=img.dataset.src;
         img.onload=()=>{
-          img.classList.add('bd-loaded');img.classList.remove('bd-loading');
-          bdImgUnloader.observe(img); // watch for unload once loaded
+          img.classList.add('bd-fading','bd-loaded');
+          img.classList.remove('bd-loading');
+          setTimeout(()=>img.classList.remove('bd-fading'),300);
+          bdImgUnloader.observe(img);
         };
         img.onerror=()=>{img.classList.add('bd-loaded')};
         img.src=s;
@@ -3141,7 +3149,7 @@ const bdImgObserver = new IntersectionObserver(entries=>{
 },{rootMargin:'500px'});
 
 // Unload images that are far off-screen to free decoded pixel memory
-// rootMargin 2000px top+bottom = keep loaded within 2000px of viewport
+// rootMargin 800px = keep loaded images within ~2 screens of viewport
 const bdImgUnloader = new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(!e.isIntersecting){
@@ -3156,7 +3164,7 @@ const bdImgUnloader = new IntersectionObserver(entries=>{
       }
     }
   });
-},{rootMargin:'2000px 0px 2000px 0px'});
+},{rootMargin:'800px 0px 800px 0px'});
 
 // Per-container state for infinite scroll
 const bdStates={};
@@ -3296,20 +3304,22 @@ function closeBDLB(){
   document.getElementById('bdLBIframe').src='';
   document.getElementById('bdLBDownload').style.display='none';
   _unlockScroll();
+  bdClearPreload();
   const music=document.getElementById('bgMusic');
   if(music&&music._pausedForVideo){music.play();music._pausedForVideo=false;}
 }
 // Preload cache so adjacent images are already in memory
-const bdPreloadCache={};
+let bdPreloadCache={};
 function bdPreload(ids,idx){
   [-1,1,2].forEach(d=>{
     const i=(idx+d+ids.length)%ids.length;
     if(!bdPreloadCache[ids[i]]){
-      const p=new Image();p.src=gdImg(ids[i]);
+      const p=new Image();p.src=`https://lh3.googleusercontent.com/d/${ids[i]}=w1200`;
       bdPreloadCache[ids[i]]=p;
     }
   });
 }
+function bdClearPreload(){bdPreloadCache={};}
 function bdLBNav(dir){
   const ids=bdPhotoMaps[bdLBContainerId]||[];
   if(!ids.length)return;
