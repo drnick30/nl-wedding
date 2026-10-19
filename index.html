@@ -3126,45 +3126,63 @@ function gdVid(id){return'https://drive.google.com/file/d/'+id+'/preview'}
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const BD_BATCH = 30;
 
-// Lazy-load images as they approach the viewport
+// Batch src assignments into one rAF so multiple observer entries per frame
+// don't each trigger a separate layout recalc
+let _bdLoadQueue=[], _bdLoadRaf=false;
+function _flushBdLoads(){
+  _bdLoadRaf=false;
+  _bdLoadQueue.forEach(img=>{
+    if(!img.dataset.src)return;
+    const s=img.dataset.src;
+    delete img.dataset.src;
+    img.src=s;
+    // decode() moves pixel decode off the main thread — no jank
+    img.decode().then(()=>{
+      const card=img.parentElement;
+      if(card){
+        if(!card.dataset.h)card.dataset.h=card.offsetHeight;
+        card.style.minHeight=''; // release height lock — real image now fills it
+      }
+      img.classList.add('bd-fading','bd-loaded');
+      img.classList.remove('bd-loading');
+      img.addEventListener('transitionend',()=>img.classList.remove('bd-fading'),{once:true});
+      bdImgUnloader.observe(img);
+    }).catch(()=>{img.classList.add('bd-loaded');});
+  });
+  _bdLoadQueue=[];
+}
+
 const bdImgObserver = new IntersectionObserver(entries=>{
   entries.forEach(e=>{
-    if(e.isIntersecting){
-      const img=e.target;
-      if(img.dataset.src){
-        const s=img.dataset.src;
-        img.onload=()=>{
-          img.classList.add('bd-fading','bd-loaded');
-          img.classList.remove('bd-loading');
-          setTimeout(()=>img.classList.remove('bd-fading'),300);
-          bdImgUnloader.observe(img);
-        };
-        img.onerror=()=>{img.classList.add('bd-loaded')};
-        img.src=s;
-        delete img.dataset.src;
-      }
-      bdImgObserver.unobserve(img);
+    if(e.isIntersecting&&e.target.dataset.src){
+      _bdLoadQueue.push(e.target);
+      bdImgObserver.unobserve(e.target);
     }
   });
-},{rootMargin:'500px'});
+  if(_bdLoadQueue.length&&!_bdLoadRaf){_bdLoadRaf=true;requestAnimationFrame(_flushBdLoads);}
+},{rootMargin:'400px'});
 
-// Unload images that are far off-screen to free decoded pixel memory
-// rootMargin 800px = keep loaded images within ~2 screens of viewport
+// Unload images far off-screen — but preserve card height to prevent layout shifts
 const bdImgUnloader = new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(!e.isIntersecting){
       const img=e.target;
-      // only unload if already loaded (not skeleton / not already unloaded)
-      if(!img.dataset.src && img.src && !img.src.endsWith('BAEAAAAALAAAAAABAAEAAAIBRAA7')){
+      if(!img.dataset.src&&img.src&&!img.src.endsWith('BAEAAAAALAAAAAABAAEAAAIBRAA7')){
+        // lock card height before collapsing image
+        const card=img.parentElement;
+        if(card){
+          const h=card.dataset.h||card.offsetHeight;
+          card.style.minHeight=h+'px';
+        }
         img.dataset.src=img.src;
         img.src=BLANK_GIF;
         img.classList.remove('bd-loaded');
-        bdImgObserver.observe(img); // re-queue for reload on scroll-back
+        bdImgObserver.observe(img);
         bdImgUnloader.unobserve(img);
       }
     }
   });
-},{rootMargin:'800px 0px 800px 0px'});
+},{rootMargin:'1000px 0px 1000px 0px'});
 
 // Per-container state for infinite scroll
 const bdStates={};
