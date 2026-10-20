@@ -735,27 +735,22 @@ body{
 }
 .bd-sub::before,.bd-sub::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.35),transparent)}
 .bd-photo-grid{
-  display:flex;gap:4px;align-items:flex-start;margin-bottom:1rem;
+  display:flex;gap:3px;margin-bottom:1rem;touch-action:pan-y;
 }
-.bd-col{flex:1;display:flex;flex-direction:column;gap:4px;transform:translateZ(0);}
-.bd-photo-grid{touch-action:pan-y;}
+.bd-col{flex:1;display:flex;flex-direction:column;gap:3px;}
+/* Fixed aspect ratio = zero layout shifts, no height reads, no reflow on load/unload */
 .bd-photo-grid .gal-card{
-  width:100%;aspect-ratio:unset;height:auto;display:block;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
+  width:100%;aspect-ratio:2/3;overflow:hidden;display:block;
+  background:#1c1c1c;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+  /* no box-shadow, no border-radius stacking context — keeps off GPU layer list */
 }
 .bd-photo-grid .gal-card img{
-  height:auto;width:100%;display:block;
+  width:100%;height:100%;object-fit:cover;display:block;
   opacity:0;
-  /* no transition by default — added by JS only during fade-in to avoid
-     creating GPU layers for every image on the page */
 }
-.bd-photo-grid .gal-card img.bd-fading{transition:opacity .25s ease;}
-/* disable hover zoom on touch devices — causes repaints on every tap */
-@media(hover:none){
-  .bd-photo-grid .gal-card:hover img{transform:none}
-}
-.bd-photo-grid .gal-card img.bd-loaded{opacity:1}
+.bd-photo-grid .gal-card img.bd-fading{transition:opacity .2s ease;}
+.bd-photo-grid .gal-card img.bd-loaded{opacity:1;}
 @media(max-width:600px){
   .lb-nav{display:none}
   .bd-lightbox>img{max-width:100%;max-height:80vh;border-radius:0}
@@ -798,11 +793,7 @@ body{
   position:absolute;bottom:1.2rem;left:50%;transform:translateX(-50%);
   font-family:'Jost',sans-serif;font-size:.48rem;letter-spacing:.15em;color:rgba(255,255,255,.4);
 }
-/* Loading skeleton — solid bg, no animation (animated gradient = GPU layer per card) */
-.bd-photo-grid .gal-card img.bd-loading{
-  background:#1c1c1c;
-  min-height:100px;
-}
+/* skeleton: card bg (#1c1c1c) shows through while img is transparent */
 @keyframes bdSkel{0%{background-position:200% 0}100%{background-position:-200% 0}}
 @media(max-width:768px){
   .bd-photo-grid{gap:3px}
@@ -3131,54 +3122,45 @@ function gdVid(id){return'https://drive.google.com/file/d/'+id+'/preview'}
 const BLANK_GIF = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 const BD_BATCH = 30;
 
-// Batch src assignments into one rAF so multiple observer entries per frame
-// don't each trigger a separate layout recalc
-let _bdLoadQueue=[], _bdLoadRaf=false;
-function _flushBdLoads(){
-  _bdLoadRaf=false;
-  _bdLoadQueue.forEach(img=>{
-    if(!img.dataset.src)return;
+// Concurrency-limited loader: max 5 simultaneous fetches
+const MAX_LOADS=5;
+let _bdLoadQueue=[],_bdActiveLoads=0;
+
+function _bdNext(){
+  while(_bdActiveLoads<MAX_LOADS&&_bdLoadQueue.length){
+    const img=_bdLoadQueue.shift();
+    if(!img.dataset.src)continue;
     const s=img.dataset.src;
     delete img.dataset.src;
+    _bdActiveLoads++;
     img.src=s;
-    // decode() moves pixel decode off the main thread — no jank
     img.decode().then(()=>{
-      const card=img.parentElement;
-      if(card){
-        if(!card.dataset.h)card.dataset.h=card.offsetHeight;
-        card.style.minHeight=''; // release height lock — real image now fills it
-      }
+      _bdActiveLoads--;
       img.classList.add('bd-fading','bd-loaded');
       img.classList.remove('bd-loading');
       img.addEventListener('transitionend',()=>img.classList.remove('bd-fading'),{once:true});
       bdImgUnloader.observe(img);
-    }).catch(()=>{img.classList.add('bd-loaded');});
-  });
-  _bdLoadQueue=[];
+      _bdNext();
+    }).catch(()=>{_bdActiveLoads--;img.classList.add('bd-loaded');_bdNext();});
+  }
 }
 
-const bdImgObserver = new IntersectionObserver(entries=>{
+const bdImgObserver=new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(e.isIntersecting&&e.target.dataset.src){
       _bdLoadQueue.push(e.target);
       bdImgObserver.unobserve(e.target);
     }
   });
-  if(_bdLoadQueue.length&&!_bdLoadRaf){_bdLoadRaf=true;requestAnimationFrame(_flushBdLoads);}
-},{rootMargin:'400px'});
+  _bdNext();
+},{rootMargin:'300px'});
 
-// Unload images far off-screen — but preserve card height to prevent layout shifts
-const bdImgUnloader = new IntersectionObserver(entries=>{
+// Unload off-screen images — fixed aspect ratio means zero layout shift on unload
+const bdImgUnloader=new IntersectionObserver(entries=>{
   entries.forEach(e=>{
     if(!e.isIntersecting){
       const img=e.target;
       if(!img.dataset.src&&img.src&&!img.src.endsWith('BAEAAAAALAAAAAABAAEAAAIBRAA7')){
-        // lock card height before collapsing image
-        const card=img.parentElement;
-        if(card){
-          const h=card.dataset.h||card.offsetHeight;
-          card.style.minHeight=h+'px';
-        }
         img.dataset.src=img.src;
         img.src=BLANK_GIF;
         img.classList.remove('bd-loaded');
@@ -3187,7 +3169,7 @@ const bdImgUnloader = new IntersectionObserver(entries=>{
       }
     }
   });
-},{rootMargin:'1000px 0px 1000px 0px'});
+},{rootMargin:'1200px 0px 1200px 0px'});
 
 // Per-container state for infinite scroll
 const bdStates={};
