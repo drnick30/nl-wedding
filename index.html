@@ -3173,28 +3173,52 @@ const bdImgUnloader=new IntersectionObserver(entries=>{
 
 // Per-container state for infinite scroll
 const bdStates={};
+const MAX_DOM_CARDS=150; // 50 per column max — keeps DOM lean throughout gallery
 
 function appendBDPhotos(containerId,start){
   const state=bdStates[containerId];
   const ids=state.ids;
   const grid=document.getElementById(containerId);
   const cols=state.cols;
+  const spacers=state.spacers;
   const end=Math.min(start+BD_BATCH,ids.length);
+
   for(let i=start;i<end;i++){
     const card=document.createElement('div');
     card.className='gal-card';
     card.onclick=(()=>{const idx=i;return()=>openBDPhoto(containerId,idx)})();
     const img=document.createElement('img');
-    img.className='bd-loading';
     img.src=BLANK_GIF;
     img.dataset.src=`https://lh3.googleusercontent.com/d/${ids[i]}=w400`;
     img.alt='';
     card.append(img);
-    // round-robin across 3 columns — appending to a column never moves existing cards
     cols[i%3].appendChild(card);
     bdImgObserver.observe(img);
   }
   state.loaded=end;
+
+  // Prune oldest batch when DOM exceeds limit
+  // Each column's children: [spacer, ...cards]
+  const domCount=end-state.firstInDom;
+  if(domCount>MAX_DOM_CARDS){
+    const removePerCol=BD_BATCH/3; // BD_BATCH always divisible by 3
+    // Fixed aspect-ratio cards: colWidth = (vw - 38) / 3, cardH = colWidth * 1.5
+    const colW=(window.innerWidth-38)/3;
+    const cardH=colW*1.5;
+    const addH=removePerCol*cardH+(removePerCol-1)*3; // total height of removed cards
+    for(let c=0;c<3;c++){
+      let n=removePerCol;
+      while(n-->0&&cols[c].children.length>1){
+        const card=cols[c].children[1];
+        const img=card.querySelector('img');
+        if(img){bdImgObserver.unobserve(img);bdImgUnloader.unobserve(img);}
+        cols[c].removeChild(card);
+      }
+      spacers[c].style.height=(parseFloat(spacers[c].style.height||0)+addH)+'px';
+    }
+    state.firstInDom+=BD_BATCH;
+  }
+
   if(end<ids.length){
     if(!state.sentinel){
       const sentinel=document.createElement('div');
@@ -3211,22 +3235,24 @@ function appendBDPhotos(containerId,start){
     }
   } else if(state.sentinel){
     state.sentinelObs&&state.sentinelObs.disconnect();
-    state.sentinel.remove();
-    state.sentinel=null;
+    state.sentinel.remove();state.sentinel=null;
   }
 }
 
 function renderBDPhotos(ids,containerId){
   const grid=document.getElementById(containerId);
   grid.innerHTML='';
-  // create 3 column divs once — subsequent appends go to columns, not the grid directly
-  const cols=[0,1,2].map(()=>{
+  const cols=[],spacers=[];
+  for(let c=0;c<3;c++){
     const col=document.createElement('div');
     col.className='bd-col';
+    const spacer=document.createElement('div'); // top spacer grows as old cards pruned
+    spacer.style.height='0px';
+    col.appendChild(spacer);
     grid.appendChild(col);
-    return col;
-  });
-  bdStates[containerId]={ids,loaded:0,sentinel:null,sentinelObs:null,cols};
+    cols.push(col);spacers.push(spacer);
+  }
+  bdStates[containerId]={ids,loaded:0,firstInDom:0,sentinel:null,sentinelObs:null,cols,spacers};
   appendBDPhotos(containerId,0);
 }
 
